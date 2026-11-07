@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Globo com três pontos nas cores dos grupos -->
+  <circle cx="16" cy="16" r="14" fill="#c9d9df" stroke="#2a241c" stroke-width="2"/>
+  <path d="M8 13c3-3 6-2 8 0s4 3 8 1M7 20c4 1 6-1 9 0s5 2 9 0" fill="none" stroke="#efe5cf" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="11" cy="11" r="2.6" fill="#d55e00"/>
+  <circle cx="21" cy="15" r="2.6" fill="#009e73"/>
+  <circle cx="14" cy="22" r="2.6" fill="#0072b2"/>
+</svg>

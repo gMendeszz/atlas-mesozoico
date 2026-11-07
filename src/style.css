@@ -1,0 +1,689 @@
+/* Cores do tema. O tema escuro troca só estes valores; o atributo data-tema no <html> é posto
+   antes de a página aparecer (public/tema-inicial.js), então não há "piscada" de tema claro. */
+:root {
+  --fundo: #fbf8f2;
+  --texto: #2a241c;
+  --suave: #6b6052;
+  --borda: #e3dccf;
+  --trilho: #ece5d8;
+  --trilho-forte: #e2d9c8;
+  --destaque: #a2471f;
+  --superficie: #fff; /* botões e campos */
+  --contra: #fff; /* texto e detalhes sobre fundo da cor do texto */
+  --espaco: #e9e4da; /* em volta do globo */
+  --histograma: #8a7a63;
+  --placeholder: #776c5e;
+  --erro: #a2271f;
+  --sombra: rgb(0 0 0 / 0.08);
+  color-scheme: light;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--texto);
+}
+
+:root[data-tema="escuro"] {
+  --fundo: #1d1a16;
+  --texto: #ece6dc;
+  --suave: #b3a998;
+  --borda: #3a342c;
+  --trilho: #2b2620;
+  --trilho-forte: #3a342c;
+  --destaque: #f08a55;
+  --superficie: #2a251f;
+  --contra: #1d1a16;
+  --espaco: #12100d;
+  --histograma: #a39278;
+  --placeholder: #9d9384;
+  --erro: #ff8f80;
+  --sombra: rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--fundo);
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+  background: var(--espaco);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--destaque);
+  outline-offset: 2px;
+}
+
+/* ---------- Painel ---------- */
+.painel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 280px;
+  max-width: calc(100% - 32px);
+  /* termina sempre acima da linha do tempo (rola por dentro se precisar): os dois nunca se cobrem */
+  max-height: calc(100dvh - 16px - 210px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 16px 16px;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px var(--sombra);
+}
+
+.painel-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.painel h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+.contagem {
+  margin: 2px 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.botoes-topo {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
+
+.recolher,
+.tema {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--superficie);
+  color: var(--texto);
+  cursor: pointer;
+}
+
+/* Tema: mostra a lua no claro (vai pro escuro) e o sol no escuro (vai pro claro) */
+.tema .sol { display: none; }
+:root[data-tema="escuro"] .tema .sol { display: block; }
+:root[data-tema="escuro"] .tema .lua { display: none; }
+
+.recolher svg { transition: transform 0.2s; }
+.recolher[aria-expanded="false"] svg { transform: rotate(180deg); }
+
+.painel-corpo[hidden] { display: none; }
+
+.sub {
+  margin: 4px 0 12px;
+  font-size: 0.8rem;
+  color: var(--suave);
+}
+
+/* Alternância Mapa / Globo */
+.vistas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  margin-bottom: 8px;
+  background: var(--trilho);
+  border-radius: 8px;
+}
+
+.vistas button,
+.girar,
+.limpar {
+  font: inherit;
+  font-size: 0.875rem;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--texto);
+  background: transparent;
+}
+
+.vistas button[aria-pressed="true"] {
+  background: var(--superficie);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+
+.girar,
+.limpar {
+  width: 100%;
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+}
+
+.girar { margin-bottom: 4px; }
+
+.rotulo-grupo { margin-top: 12px; }
+
+.paleo-info {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--suave);
+}
+
+.paleo-info[hidden] { display: none; }
+
+.girar[hidden],
+.limpar[hidden] { display: none; }
+
+/* ---------- Filtros ---------- */
+.filtro {
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.filtro legend,
+.rotulo {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--suave);
+}
+
+/* Grupo: checkboxes que também são a legenda */
+.opcoes {
+  display: grid;
+  gap: 2px;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.opcao input {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--texto);
+}
+
+.opcao .n {
+  margin-left: auto;
+  color: var(--suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.zero { opacity: 0.55; }
+
+.bola {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid var(--fundo);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.15);
+  background: var(--cor); /* cor do grupo, posta no HTML (--cor e --cor-escura) */
+}
+
+:root[data-tema="escuro"] .bola { background: var(--cor-escura); }
+
+.nota {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--suave);
+}
+
+select {
+  width: 100%;
+  min-height: 34px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+}
+
+.limpar {
+  margin-top: 14px;
+  color: var(--destaque);
+  font-weight: 600;
+}
+
+/* ---------- Popup ---------- */
+.maplibregl-popup-content {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  padding: 12px 14px;
+}
+
+.pop-lugar {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.pop-n {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.pop-ocultos {
+  color: var(--suave);
+  font-size: 0.75rem;
+}
+
+.pop-lista {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.pop-lista li {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 2px 0;
+}
+
+.pop-lista .bola {
+  width: 9px;
+  height: 9px;
+  transform: translateY(1px);
+}
+
+.pop-lista small { color: var(--suave); }
+
+.maplibregl-popup-content a {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--destaque);
+}
+
+@media (max-width: 600px) {
+  .painel {
+    top: 10px;
+    left: 10px;
+    right: 56px; /* deixa livres os botões de zoom à direita */
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - 220px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recolher svg { transition: none; }
+}
+
+/* ---------- Linha do tempo ---------- */
+.rodape {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 30px; /* acima da atribuição do mapa base */
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.linha-tempo {
+  --meia-alca: 11px; /* metade da largura da alça; alinha histograma e escala */
+  width: min(720px, 100%);
+  padding: 8px 14px 6px;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px var(--sombra);
+  pointer-events: auto;
+}
+
+.lt-topo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 26px;
+}
+
+.lt-topo .rotulo { margin: 0; }
+
+#lt-faixa {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.lt-tudo {
+  margin-left: auto;
+  padding: 2px 8px;
+  min-height: 26px;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--destaque);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.lt-tudo[hidden] { display: none; }
+
+.lt-trilho {
+  position: relative;
+  height: 44px;
+}
+
+.lt-hist {
+  position: absolute;
+  inset: 2px var(--meia-alca) 0;
+  width: calc(100% - 2 * var(--meia-alca));
+  height: 42px;
+}
+
+#lt-area { fill: var(--histograma); }
+.lt-hist rect { fill: var(--fundo); opacity: 0.72; }
+
+/* Dois sliders nativos sobrepostos; só as alças recebem clique */
+.lt-trilho input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: none;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.lt-trilho input[type="range"]::-webkit-slider-runnable-track { height: 100%; background: transparent; }
+.lt-trilho input[type="range"]::-moz-range-track { height: 100%; background: transparent; }
+
+.lt-trilho input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: calc(2 * var(--meia-alca));
+  height: 44px;
+  border-radius: 6px;
+  background: var(--texto) linear-gradient(90deg, transparent 9px, var(--contra) 9px 10px, transparent 10px 12px, var(--contra) 12px 13px, transparent 13px);
+  border: 2px solid var(--contra);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+  cursor: ew-resize;
+}
+
+.lt-trilho input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: calc(2 * var(--meia-alca) - 4px);
+  height: 40px;
+  border-radius: 6px;
+  background: var(--texto);
+  border: 2px solid var(--contra);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+  cursor: ew-resize;
+}
+
+.lt-trilho input[type="range"]:focus-visible { outline: none; }
+.lt-trilho input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--destaque); }
+.lt-trilho input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--destaque); }
+
+.lt-escala {
+  position: relative;
+  height: 14px;
+  margin: 2px var(--meia-alca) 0;
+  font-size: 0.6875rem;
+  color: var(--suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.lt-escala span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.lt-escala span:first-child { transform: none; }
+.lt-escala span:last-child { transform: translateX(-100%); }
+
+.lt-periodos {
+  display: flex;
+  gap: 3px;
+  margin: 3px var(--meia-alca) 0;
+}
+
+.lt-periodos button {
+  min-width: 0;
+  min-height: 28px;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--texto);
+  background: var(--trilho);
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lt-periodos button:hover { background: var(--trilho-forte); }
+
+.lt-periodos button[aria-pressed="true"] {
+  background: var(--texto);
+  color: var(--contra);
+  font-weight: 600;
+}
+
+.credito {
+  margin: 6px 0 0;
+  font-size: 0.6875rem;
+  color: var(--suave);
+}
+
+.credito a { color: inherit; }
+
+@media (max-width: 600px) {
+  .rodape { left: 8px; right: 8px; }
+  .linha-tempo { padding: 6px 10px 4px; }
+  .lt-topo .rotulo { display: none; } /* o título "Tempo" é óbvio aqui; libera espaço */
+  #lt-faixa { font-size: 0.8125rem; }
+  .lt-tudo { padding: 2px 4px; white-space: nowrap; }
+}
+
+/* ---------- Busca ---------- */
+.busca { margin-bottom: 12px; }
+
+.busca .rotulo { margin-bottom: 4px; }
+
+.busca-campo { position: relative; }
+
+.busca-campo input {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 34px 6px 10px;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+}
+
+.busca-campo input::placeholder { color: var(--placeholder); }
+.busca-campo input::-webkit-search-cancel-button { display: none; } /* usamos o nosso × */
+
+.busca-limpar {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--suave);
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.busca-limpar[hidden] { display: none; }
+
+.busca-info {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--suave);
+}
+
+.busca-info:empty { display: none; }
+
+/* ---------- "O que entra em Outros?" ---------- */
+.nota-extra {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--suave);
+}
+
+.nota-extra summary {
+  cursor: pointer;
+  color: var(--destaque);
+  width: fit-content;
+}
+
+.nota-extra p { margin: 4px 0 0; line-height: 1.4; }
+
+/* ---------- Dica ao passar o mouse ---------- */
+.dica .maplibregl-popup-content {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.dica { pointer-events: none; }
+
+/* Legenda do histograma */
+.lt-legenda {
+  font-size: 0.75rem;
+  color: var(--suave);
+}
+
+@media (max-width: 600px) {
+  .lt-legenda { display: none; }
+}
+
+/* Mensagem de erro no lugar da contagem */
+.contagem.erro { color: var(--erro); }
+
+/* Identificação incerta no popup */
+.incerto {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 5px;
+  border: 1px dashed var(--suave);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  color: var(--suave) !important;
+  cursor: help;
+}
+
+/* "Sobre os dados" */
+.sobre {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--borda);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--suave);
+}
+
+.sobre summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.sobre ul { margin: 6px 0 0; padding-left: 16px; }
+.sobre li { margin: 3px 0; }
+.sobre a { color: var(--destaque); }
+
+/* ---------- Controles e popups do MapLibre no tema escuro ---------- */
+:root[data-tema="escuro"] .maplibregl-ctrl-group,
+:root[data-tema="escuro"] .maplibregl-ctrl-attrib,
+:root[data-tema="escuro"] .maplibregl-ctrl-attrib.maplibregl-compact {
+  background: var(--fundo);
+  color: var(--suave);
+}
+
+:root[data-tema="escuro"] .maplibregl-ctrl-group button + button { border-top-color: var(--borda); }
+:root[data-tema="escuro"] .maplibregl-ctrl-attrib a { color: var(--suave); }
+
+/* Os ícones do MapLibre são imagens pretas: invertidos, ficam claros */
+:root[data-tema="escuro"] .maplibregl-ctrl button .maplibregl-ctrl-icon,
+:root[data-tema="escuro"] .maplibregl-ctrl-attrib-button { filter: invert(0.9); }
+
+:root .maplibregl-popup-content {
+  background: var(--fundo);
+  color: var(--texto);
+  box-shadow: 0 2px 10px var(--sombra);
+}
+
+:root .maplibregl-popup-close-button { color: var(--suave); }
+
+/* A "setinha" do popup é uma borda colorida: acompanha o fundo */
+:root .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+:root .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+:root .maplibregl-popup-anchor-top-right .maplibregl-popup-tip { border-bottom-color: var(--fundo); }
+:root .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+:root .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+:root .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip { border-top-color: var(--fundo); }
+:root .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--fundo); }
+:root .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--fundo); }
+
+/* Popup: autor e ano do nome, e a marca de pegada/ovo */
+.pop-lista .autor { color: var(--suave); font-size: 0.75rem; }
+
+.tipo-fossil {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 0 5px;
+  border: 1px solid var(--suave);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  color: var(--suave) !important;
+}
