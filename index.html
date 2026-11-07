@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Atlas Mesozoico</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#fbf8f2" />
+    <!-- Antes de tudo: põe o tema certo (claro/escuro) sem a página piscar -->
+    <script src="tema-inicial.js"></script>
+    <meta name="description" content="Mapa interativo de fósseis de dinossauros do Mesozoico, com dados do Paleobiology Database." />
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <aside class="painel" aria-label="Controles do mapa">
+      <div class="painel-topo">
+        <h1>Atlas Mesozoico</h1>
+        <div class="botoes-topo">
+          <button type="button" class="tema" id="tema" aria-pressed="false" title="Tema escuro">
+            <span class="sr-only">Tema escuro</span>
+            <svg class="lua" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path d="M13.5 9.8A5.6 5.6 0 0 1 6.2 2.5a5.6 5.6 0 1 0 7.3 7.3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+            <svg class="sol" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/></g></svg>
+          </button>
+          <button type="button" class="recolher" id="recolher" aria-expanded="true" aria-controls="painel-corpo">
+            <span class="sr-only">Recolher painel</span>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><path d="M4 10l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="contagem" id="contagem" aria-live="polite">Carregando dados…</p>
+
+      <div class="painel-corpo" id="painel-corpo">
+        <p class="sub">Fósseis de dinossauros · 252–66 milhões de anos</p>
+
+        <div class="busca">
+          <label class="rotulo" for="busca">Buscar dinossauro ou formação</label>
+          <div class="busca-campo">
+            <input id="busca" type="search" list="busca-nomes" autocomplete="off" spellcheck="false"
+              placeholder="Ex.: Irritator, Morrison" aria-describedby="busca-info" />
+            <button type="button" id="busca-limpar" class="busca-limpar" hidden>
+              <span aria-hidden="true">×</span><span class="sr-only">Limpar busca</span>
+            </button>
+          </div>
+          <datalist id="busca-nomes"></datalist>
+          <p class="busca-info" id="busca-info" aria-live="polite"></p>
+        </div>
+
+        <div class="vistas" role="group" aria-label="Visualização">
+          <button type="button" data-vista="mercator" aria-pressed="false">Mapa</button>
+          <button type="button" data-vista="globe" aria-pressed="true">Globo</button>
+        </div>
+        <button type="button" class="girar" id="girar" aria-pressed="false">Girar globo</button>
+
+        <p class="rotulo rotulo-grupo" id="rot-continentes">Continentes</p>
+        <div class="vistas" role="group" aria-labelledby="rot-continentes">
+          <button type="button" data-continentes="atuais" aria-pressed="true">Atuais</button>
+          <button type="button" data-continentes="antigos" aria-pressed="false">Antigos</button>
+        </div>
+        <p class="paleo-info" id="paleo-info" aria-live="polite" hidden></p>
+
+        <fieldset class="filtro">
+          <legend>Grupo</legend>
+          <div class="opcoes" id="f-grupo"></div>
+          <p class="nota">A cor de cada ponto é o grupo com mais fósseis naquele local.</p>
+          <details class="nota-extra">
+            <summary>O que entra em “Outros”?</summary>
+            <p>
+              Fósseis identificados só como dinossauro, grupos fora desses três (como os
+              herrerassaurídeos, do brasileiro <em>Staurikosaurus</em>) e ovos e pegadas sem
+              grupo definido.
+            </p>
+          </details>
+        </fieldset>
+
+        <fieldset class="filtro">
+          <legend>Tipo de fóssil</legend>
+          <div class="opcoes" id="f-tipo"></div>
+        </fieldset>
+
+        <fieldset class="filtro">
+          <legend>Dieta</legend>
+          <div class="opcoes" id="f-dieta"></div>
+          <p class="nota">A dieta é a do grupo do animal, segundo o PBDB, e não algo observado em cada fóssil.</p>
+        </fieldset>
+
+        <div class="filtro">
+          <label class="rotulo" for="f-pais">País</label>
+          <select id="f-pais"></select>
+        </div>
+
+        <button type="button" class="limpar" id="limpar" hidden>Limpar filtros</button>
+
+        <details class="sobre">
+          <summary>Sobre os dados e limitações</summary>
+          <ul>
+            <li>
+              <strong>Fonte:</strong> <a href="https://paleobiodb.org" target="_blank" rel="noopener">Paleobiology
+              Database<span class="sr-only"> (abre em nova aba)</span></a>, base científica mantida por
+              pesquisadores desde 1998. Cada registro vem de uma publicação: estes <span data-sobre="fosseis">22 mil</span> fósseis vêm de
+              <span data-sobre="referencias">mais de 6 mil</span> artigos e livros. Dados de <span data-sobre="data">novembro de 2026</span>.
+            </li>
+            <li>
+              <strong>O mapa mostra onde fósseis foram coletados e registrados</strong>, não onde os
+              dinossauros viviam. Há muito mais pesquisa em alguns lugares: só EUA e Canadá somam <span data-sobre="eua-canada">39%</span> dos
+              registros.
+            </li>
+            <li>
+              <strong>Idades são faixas</strong>, vindas da camada de rocha onde o fóssil estava (incerteza
+              típica de alguns milhões de anos).
+            </li>
+            <li>
+              <strong><span data-sobre="incertos">11%</span> das identificações são incertas</strong> na publicação original; elas aparecem
+              marcadas no detalhe de cada local.
+            </li>
+            <li>
+              <strong>Dieta é estimada pelo grupo</strong> do animal no PBDB (todo tiranossaurídeo conta
+              como carnívoro, por exemplo). Quando o grupo não tem dieta definida, aparece como “sem
+              informação”, em vez de um chute.
+            </li>
+            <li>
+              <strong>Pegadas e ovos</strong> vêm marcados pelo PBDB como icnofósseis e ovos. Corrigimos 3
+              marcações erradas; a formação geológica é a camada de rocha onde o fóssil estava.
+            </li>
+            <li>
+              <strong>Coordenadas são aproximadas</strong>: muitas foram estimadas a partir de mapas ou de
+              um marco próximo. Corrigimos 1 coordenada errada e excluímos 4 sem dado confiável.
+            </li>
+            <li>
+              <strong>Continentes antigos são um modelo</strong> (PALEOMAP, de Scotese): a incerteza
+              cresce quanto mais antiga a época, e modelos diferentes podem divergir.
+            </li>
+            <li>
+              <strong>Privacidade:</strong> sem cookies nem rastreamento. O mapa base vem do OpenFreeMap,
+              que, como todo site, recebe o endereço IP de quem acessa.
+            </li>
+          </ul>
+        </details>
+      </div>
+    </aside>
+
+    <div class="rodape">
+      <section class="linha-tempo" aria-labelledby="lt-titulo">
+        <div class="lt-topo">
+          <h2 class="rotulo" id="lt-titulo">Tempo</h2>
+          <output id="lt-faixa" for="lt-de lt-ate">252 – 66 milhões de anos atrás</output>
+          <span class="lt-legenda" aria-hidden="true">· altura = quantidade de fósseis</span>
+          <button type="button" class="lt-tudo" id="lt-tudo" hidden>Todo o Mesozoico</button>
+        </div>
+
+        <div class="lt-trilho">
+          <svg class="lt-hist" viewBox="0 0 186 40" preserveAspectRatio="none" aria-hidden="true">
+            <title>Quantidade de fósseis ao longo do tempo (escala comprimida)</title>
+            <path id="lt-area" />
+            <rect id="lt-sombra-esq" y="0" height="40" />
+            <rect id="lt-sombra-dir" y="0" height="40" />
+          </svg>
+          <!-- valor = milhões de anos desde 252 (0 = 252 Ma, 186 = 66 Ma), pra esquerda ser o mais antigo -->
+          <input type="range" id="lt-de" min="0" max="186" step="1" value="0" aria-label="Início do intervalo" />
+          <input type="range" id="lt-ate" min="0" max="186" step="1" value="186" aria-label="Fim do intervalo" />
+        </div>
+
+        <div class="lt-escala" aria-hidden="true">
+          <span style="left: 0%">252</span>
+          <span style="left: 27.2%">201</span>
+          <span style="left: 57.5%">145</span>
+          <span style="left: 100%">66</span>
+        </div>
+        <div class="lt-periodos" id="lt-periodos" role="group" aria-label="Atalhos de período"></div>
+
+        <footer class="credito">
+          Dados: <a href="https://paleobiodb.org" target="_blank" rel="noopener">Paleobiology Database<span class="sr-only"> (abre em nova aba)</span></a>,
+          <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>
+          <span id="credito-paleo" hidden>
+            · Continentes antigos: <a href="https://doi.org/10.5281/zenodo.10596609" target="_blank" rel="noopener">PALEOMAP (Scotese 2016)</a>
+            via <a href="https://gplates.org" target="_blank" rel="noopener">GPlates</a>, CC BY 4.0
+          </span>
+        </footer>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+# Dependências e build
+node_modules/
+dist/
+
+# Cache das respostas das APIs (51 MB; os scripts baixam de novo)
+data/raw/
+
+# Python
+__pycache__/
+*.pyc
+
+# Configuração local de ferramentas e variáveis de ambiente
+.claude/
+.env
+.env.*
+
+# Arquivos que o Windows/OneDrive/macOS criam sozinhos
+desktop.ini
+Thumbs.db
+.DS_Store
