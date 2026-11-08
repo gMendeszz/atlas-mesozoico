@@ -166,7 +166,6 @@ function Credits({ paleoVisible }: { paleoVisible: boolean }) {
       <a href="https://paleobiodb.org" target="_blank" rel="noopener">
         Paleobiology Database<span className="sr-only"> (opens in a new tab)</span>
       </a>
-      , <Link href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</Link>
       {paleoVisible && (
         <span>
           {" "}

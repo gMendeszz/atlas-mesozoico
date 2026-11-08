@@ -206,9 +206,30 @@ it fails.
 - `docs/` — README screenshots (not part of the site)
 - `data/raw/` — API response cache (not in git)
 
-## Credits
+## Credits and licenses
 
-Data: [Paleobiology Database](https://paleobiodb.org), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-Ancient continents: Scotese, C. R. (2016), [PALEOMAP PaleoAtlas for GPlates](https://doi.org/10.5281/zenodo.10596609), CC BY 4.0,
-reconstructed with the [GPlates Web Service](https://gws.gplates.org) (EarthByte, University of Sydney).
-Base map: © OpenFreeMap, OpenMapTiles, OpenStreetMap.
+**Fossil data:** [Paleobiology Database](https://paleobiodb.org) (PBDB). The PBDB releases its data
+openly and asks users to credit the database and the publications behind the records (its FAQ
+describes an attribution license and links [CC0](https://creativecommons.org/publicdomain/zero/1.0/)).
+Citation, in the form the PBDB recommends: data downloaded from the Paleobiology Database on
+7 November 2026, using the group name Dinosauria and the time interval Mesozoic
+([API query](https://paleobiodb.org/data1.2/occs/list.json?base_name=Dinosauria&interval=Mesozoic)).
+The 6,061 publications behind the records:
+[full list](https://paleobiodb.org/data1.2/occs/refs.csv?base_name=Dinosauria&interval=Mesozoic&show=formatted)
+(from the PBDB API). Each site links to its PBDB collection page, with its references and
+contributors. Changes made here are listed under [Data quality](#data-quality).
+
+**Ancient continents:** Scotese, C. R. (2016), [PALEOMAP PaleoAtlas for GPlates](https://doi.org/10.5281/zenodo.10596609),
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), reconstructed with the
+[GPlates Web Service](https://gws.gplates.org) (EarthByte, University of Sydney). Changes: coastline
+outlines simplified (~17 km tolerance) and islets under 0.2 square degrees removed
+(`scripts/fetch_paleo.py`).
+
+**Base map:** [OpenFreeMap](https://openfreemap.org) (free public instance, no API key),
+© [OpenMapTiles](https://www.openmaptiles.org/), data from
+[OpenStreetMap](https://www.openstreetmap.org/copyright) contributors. The credit is shown on the
+map by MapLibre and links to the OpenStreetMap copyright page.
+
+**Libraries:** React, MapLibre GL JS and their dependencies, all under permissive licenses (MIT,
+ISC, BSD, Apache-2.0). The build generates `third-party-licenses.txt` with each license text,
+linked from the site's About section.

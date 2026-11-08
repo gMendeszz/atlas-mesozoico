@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -32,6 +32,34 @@ const CSP = [
   "form-action 'none'",
   "upgrade-insecure-requests",
 ].join("; ");
+
+// License texts of every library that ships inside the site (the runtime dependencies and all
+// of theirs). Their licenses (MIT, ISC, BSD) require the notice to go along with the code; the
+// minified bundle drops most of them, so they're collected here into third-party-licenses.txt.
+function thirdPartyLicenses(): string {
+  const seen = new Map<string, string>(); // name -> text
+  const visit = (name: string) => {
+    if (seen.has(name)) return;
+    const dir = resolve("node_modules", name);
+    const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+    if (name.startsWith("@types/")) return; // type definitions: not part of the bundle
+    const file = readdirSync(dir).find((f) => /^(licen[cs]e|copying)(\.(md|txt))?$/i.test(f));
+    // Some packages keep the license in a "## License" section of the README instead of a file
+    const readme = readdirSync(dir).find((f) => /^readme(\.md)?$/i.test(f));
+    const fromReadme = readme && /^#+ *Licen[cs]e[^\n]*\n([\s\S]*?)(?=\n#+ |(?![\s\S]))/im.exec(readFileSync(join(dir, readme), "utf8"));
+    const text = file
+      ? readFileSync(join(dir, file), "utf8").trim()
+      : fromReadme
+        ? fromReadme[1].trim()
+        : `License: ${pkg.license} (no license text in the package)`;
+    seen.set(name, `${pkg.name} ${pkg.version} — ${pkg.license}\n${pkg.homepage ?? ""}\n\n${text}`);
+    for (const dep of Object.keys(pkg.dependencies ?? {})) if (existsSync(resolve("node_modules", dep))) visit(dep);
+  };
+  const root = JSON.parse(readFileSync("package.json", "utf8"));
+  for (const dep of Object.keys(root.dependencies)) visit(dep);
+  const header = "Open-source libraries used by the Mesozoic Atlas, with their licenses.\n";
+  return [header, ...[...seen.keys()].sort().map((k) => seen.get(k))].join(`\n\n${"=".repeat(72)}\n\n`) + "\n";
+}
 
 export default defineConfig({
   // Relative paths: works both on a custom domain and on user.github.io/repository/
@@ -69,10 +97,17 @@ export default defineConfig({
       transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", SITE_URL),
     },
     {
-      // robots.txt and sitemap.xml, which also need the full address
-      name: "robots-and-sitemap",
-      apply: "build",
+      // robots.txt and sitemap.xml (which also need the full address) and the third-party licenses
+      name: "robots-sitemap-licenses",
+      // In development, the licenses page is served on the fly (the link in About works there too)
+      configureServer(server) {
+        server.middlewares.use("/third-party-licenses.txt", (_req, res) => {
+          res.setHeader("Content-Type", "text/plain; charset=utf-8");
+          res.end(thirdPartyLicenses());
+        });
+      },
       generateBundle() {
+        this.emitFile({ type: "asset", fileName: "third-party-licenses.txt", source: thirdPartyLicenses() });
         const robots = ["User-agent: *", "Allow: /", "", `Sitemap: ${SITE_URL}sitemap.xml`, ""].join("\n");
         this.emitFile({ type: "asset", fileName: "robots.txt", source: robots });
         this.emitFile({
