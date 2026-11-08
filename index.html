@@ -3,12 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Atlas Mesozoico</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#fbf8f2" />
+    <title>Atlas Mesozoico · Mapa de fósseis de dinossauros</title>
+    <meta name="description" content="Mapa interativo de 22 mil fósseis de dinossauros do Mesozoico, com globo, linha do tempo e continentes antigos. Dados do Paleobiology Database." />
+    <!-- O marcador SITE_URL (entre %) vira o endereço público do site (ver vite.config.ts) -->
+    <link rel="canonical" href="%SITE_URL%" />
+
     <!-- Antes de tudo: põe o tema certo (claro/escuro) sem a página piscar -->
     <script src="tema-inicial.js"></script>
-    <meta name="description" content="Mapa interativo de fósseis de dinossauros do Mesozoico, com dados do Paleobiology Database." />
+    <meta name="theme-color" content="#fbf8f2" />
+
+    <!-- Ícones: SVG nos navegadores atuais, PNG nos demais; apple-touch e manifest pra tela inicial do celular -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Prévia ao compartilhar o link (WhatsApp, LinkedIn, Twitter/X...) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Atlas Mesozoico" />
+    <meta property="og:title" content="Atlas Mesozoico · Mapa de fósseis de dinossauros" />
+    <meta property="og:description" content="Mapa interativo de 22 mil fósseis de dinossauros, do Triássico ao Cretáceo, com globo e continentes antigos." />
+    <meta property="og:url" content="%SITE_URL%" />
+    <meta property="og:image" content="%SITE_URL%previa-social.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Globo com os pontos de fósseis de dinossauros nas Américas, ao lado do nome Atlas Mesozoico" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="app"></div>
