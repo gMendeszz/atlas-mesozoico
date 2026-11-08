@@ -134,11 +134,13 @@ Cada teste foi validado reintroduzindo de propósito o bug que ele protege e con
     `histograma.ts`, `constantes.ts`; tipos dos dados em `tipos.ts`
   - mapa (MapLibre, imperativo): `mapa.ts` (camadas, tema do mapa base, enquadramento) e
     `popups-mapa.ts`
-  - hooks que ligam o mapa ao React: `hooks/useMapa.ts`, `useVista.ts` (globo/plano e
-    rotação), `useEpocaPaleo.ts`, `useTema.ts`
+  - hooks que ligam o mapa ao React: `hooks/useMapa.ts` (cria o mapa e acompanha o mapa
+    base), `useCamadas.ts` (pontos, continentes antigos, destaque e popups em dia com o estado),
+    `useVista.ts` (globo/plano e rotação), `useEpocaPaleo.ts`, `useTema.ts`
   - componentes: `componentes/Painel.tsx`, `Busca.tsx`, `ListaDeOpcoes.tsx`, `SeletorPais.tsx`,
     `LinhaDoTempo.tsx`, `Sobre.tsx`, `Alternador.tsx`
-  - `App.tsx` — estado do app (filtros, busca, dados) e sincronia com o mapa; `main.tsx` — entrada
+  - `App.tsx` — estado do app (filtros, busca, dados) e a tela; `main.tsx` — entrada;
+    `suporte.ts` — confere WebGL 2
   - `estilos.css` — tema do Tailwind (cores claro/escuro como tokens) e o pouco que não dá pra
     fazer com classes (alças do slider, popups e controles do MapLibre)
 - `tests/` — testes (Vitest pro site, unittest pros scripts)

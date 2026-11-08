@@ -7,11 +7,12 @@ import { carregarDados } from "./dados";
 import { LISTAS, calcular, filtrosParaURL, lerFiltrosDaURL, limparFiltros, temFiltroAtivo, type CampoLista } from "./filtros";
 import { locaisDoNome, nomesBuscaveis, resumoDaBusca } from "./busca";
 import { caminhoHistograma } from "./histograma";
-import { adicionarCamadas, enquadrar, fonte, mostrarPaleo, reduzirMovimento, type MapaLibre } from "./mapa";
-import { montarPopups, type Popups } from "./popups-mapa";
+import { enquadrar, reduzirMovimento } from "./mapa";
+import { temWebGL } from "./suporte";
 import { fmt } from "./texto";
 import type { Continentes, Dados, Filtros, Ponto, Resultado, Vista } from "./tipos";
 import type { EstadoPaleo } from "./hooks/useEpocaPaleo";
+import { useCamadas } from "./hooks/useCamadas";
 import { useEpocaPaleo } from "./hooks/useEpocaPaleo";
 import { useMapa } from "./hooks/useMapa";
 import { useTema } from "./hooks/useTema";
@@ -24,9 +25,6 @@ import { ListaDeOpcoes } from "./componentes/ListaDeOpcoes";
 import { Painel } from "./componentes/Painel";
 import { SeletorPais } from "./componentes/SeletorPais";
 import { Sobre } from "./componentes/Sobre";
-
-// O MapLibre 6 precisa de WebGL 2; sem ele, avisa em vez de deixar a página em branco
-const temWebGL = Boolean(document.createElement("canvas").getContext("webgl2"));
 
 const VISTAS: { valor: Vista; texto: string }[] = [
   { valor: "mercator", texto: "Mapa" },
@@ -53,13 +51,14 @@ export function App() {
   const elPainel = useRef<HTMLElement>(null);
   const elLinhaTempo = useRef<HTMLElement>(null);
 
-  const { map, estiloVersao, estiloPronto, camadasBase } = useMapa({
+  const mapa = useMapa({
     container: elMapa,
     linhaTempo: elLinhaTempo,
     tema,
     ativo: temWebGL,
     aoErro: mostrarErro,
   });
+  const { map, estiloVersao } = mapa;
   const { vista, escolherVista, girando, alternarGiro, pararGiro } = useVista(map, estiloVersao);
   const paleo = useEpocaPaleo(f.continentes, f.de, f.ate, dados?.meta.assinatura_locais ?? null);
 
@@ -86,51 +85,16 @@ export function App() {
   // Tudo que aparece (pontos, contagens, histograma) sai daqui, recalculado só quando algo muda
   const resultado = useMemo(() => (dados ? calcular(dados, f, paleo.epoca) : null), [dados, f, paleo.epoca]);
 
+  // ---------- Busca ----------
+  const sugestoes = useMemo(() => (dados ? nomesBuscaveis(dados) : []), [dados]);
+  const achado = useMemo(() => (dados && consulta ? locaisDoNome(dados, consulta) : null), [dados, consulta]);
+  const destaque = useMemo(
+    () => (achado && resultado ? resultado.features.filter((p) => achado.locais.has(p.id)) : []),
+    [achado, resultado]
+  );
+
   // ---------- Mapa ----------
-  // As camadas entram uma vez por mapa, quando o estilo e os dados estão prontos
-  const [mapaComCamadas, setMapaComCamadas] = useState<MapaLibre | null>(null);
-  const camadasProntas = map !== null && mapaComCamadas === map;
-  useEffect(() => {
-    if (!map || !resultado || !estiloVersao || camadasProntas || !estiloPronto()) return;
-    if (!fonte(map, "dinos")) adicionarCamadas(map, tema, resultado.features);
-    setMapaComCamadas(map);
-  }, [map, resultado, estiloVersao, camadasProntas, estiloPronto, tema]);
-
-  // Pontos: no máximo uma atualização por quadro (arrastar a alça muda o resultado muitas vezes)
-  useEffect(() => {
-    if (!map || !camadasProntas || !resultado) return;
-    const quadro = requestAnimationFrame(() => {
-      if (estiloPronto()) fonte(map, "dinos")?.setData({ type: "FeatureCollection", features: resultado.features });
-    });
-    return () => cancelAnimationFrame(quadro);
-  }, [map, camadasProntas, resultado, estiloVersao, estiloPronto]);
-
-  // Continentes antigos: troca o mapa base pelas terras da época
-  useEffect(() => {
-    if (!map || !camadasProntas || !estiloPronto()) return;
-    if (paleo.epoca) fonte(map, "paleo")?.setData(paleo.epoca.costas);
-    mostrarPaleo(map, camadasBase(), Boolean(paleo.epoca));
-  }, [map, camadasProntas, paleo.epoca, estiloVersao, estiloPronto, camadasBase]);
-
-  // Popups (lêem os filtros da hora do clique)
-  const filtrosAtuais = useRef(f);
-  useEffect(() => {
-    filtrosAtuais.current = f;
-  });
-  const popups = useRef<Popups | null>(null);
-  useEffect(() => {
-    if (!map || !dados || !camadasProntas) return;
-    const p = montarPopups(map, dados, () => filtrosAtuais.current);
-    popups.current = p;
-    return () => {
-      p.desmontar();
-      popups.current = null;
-    };
-  }, [map, dados, camadasProntas]);
-  // Mudou o que aparece no mapa: o popup aberto pode estar mostrando coisa que sumiu
-  useEffect(() => {
-    popups.current?.fechar();
-  }, [resultado]);
+  const { abrirPopup, fecharPopup } = useCamadas({ mapa, tema, dados, resultado, epoca: paleo.epoca, destaque, filtros: f });
 
   const enquadrarPontos = useCallback(
     (features: Ponto[]) => {
@@ -154,25 +118,17 @@ export function App() {
     if (!arrastando) history.replaceState(null, "", filtrosParaURL(f) || location.pathname);
   }, [f, arrastando]);
 
-  // ---------- Busca ----------
-  const sugestoes = useMemo(() => (dados ? nomesBuscaveis(dados) : []), [dados]);
-  const achado = useMemo(() => (dados && consulta ? locaisDoNome(dados, consulta) : null), [dados, consulta]);
-  const destaque = useMemo(
-    () => (achado && resultado ? resultado.features.filter((p) => achado.locais.has(p.id)) : []),
-    [achado, resultado]
-  );
-  useEffect(() => {
-    if (!map || !camadasProntas || !estiloPronto()) return;
-    fonte(map, "destaque")?.setData({
-      type: "FeatureCollection",
-      features: destaque.map((p) => ({ type: "Feature", properties: {}, geometry: p.geometry })),
-    });
-  }, [map, camadasProntas, destaque, estiloVersao, estiloPronto]);
-  // O texto do resumo não muda a cada quadro do arrasto (o leitor de tela leria cada mudança)
-  // (ajuste de estado durante a renderização: o padrão do React pra "lembrar o último valor parado")
-  const [destaqueDoTexto, setDestaqueDoTexto] = useState(destaque);
-  if (!arrastando && destaqueDoTexto !== destaque) setDestaqueDoTexto(destaque);
-  const infoBusca = dados ? resumoDaBusca(dados, consulta, achado, arrastando ? destaqueDoTexto : destaque) : "";
+  // Textos anunciados a leitores de tela (contagem, resumo da busca) não mudam a cada quadro do
+  // arrasto da alça: usam o último resultado com a alça parada. (Ajuste de estado durante a
+  // renderização: o padrão do React pra "lembrar o último valor".)
+  const [resultadoParado, setResultadoParado] = useState(resultado);
+  if (!arrastando && resultadoParado !== resultado) setResultadoParado(resultado);
+  const paraAnunciar = arrastando ? resultadoParado : resultado;
+  const infoBusca = useMemo(() => {
+    if (!dados) return "";
+    const visiveis = achado && paraAnunciar ? paraAnunciar.features.filter((p) => achado.locais.has(p.id)) : [];
+    return resumoDaBusca(dados, consulta, achado, visiveis);
+  }, [dados, consulta, achado, paraAnunciar]);
 
   function buscar(texto: string) {
     const alvo = texto.trim();
@@ -181,7 +137,7 @@ export function App() {
     const { locais } = locaisDoNome(dados, alvo);
     const visiveis = resultado.features.filter((p) => locais.has(p.id));
     if (!visiveis.length) return;
-    popups.current?.fechar(); // o popup da busca anterior não fica por cima do resultado novo
+    fecharPopup(); // o popup da busca anterior não fica por cima do resultado novo
     pararGiro();
     if (visiveis.length > 1) {
       enquadrarPontos(visiveis);
@@ -189,7 +145,7 @@ export function App() {
     }
     const [p] = visiveis;
     const centro = p.geometry.coordinates as [number, number];
-    map.once("moveend", () => popups.current?.abrir(p.id, centro));
+    map.once("moveend", () => abrirPopup(p.id, centro));
     // Zoom acima de clusterMaxZoom (9): o ponto aparece sozinho, fora de agrupamentos
     map.easeTo({ center: centro, zoom: Math.max(map.getZoom(), 9.5), duration: reduzirMovimento.matches ? 0 : 1000 });
   }
@@ -211,7 +167,6 @@ export function App() {
     document.getElementById("grupos-0")?.focus();
   }
 
-  const contagem = erro ?? textoDaContagem(resultado);
   const caminho = useMemo(() => caminhoHistograma(resultado?.histograma ?? HISTOGRAMA_VAZIO), [resultado]);
   const [grupos, tipos, dietas] = LISTAS;
 
@@ -222,12 +177,19 @@ export function App() {
         <div ref={elMapa} className="size-full bg-espaco" />
       </div>
 
-      <Painel ref={elPainel} tema={tema} aoAlternarTema={alternarTema} contagem={contagem} erro={erro !== null}>
+      <Painel
+        ref={elPainel}
+        tema={tema}
+        aoAlternarTema={alternarTema}
+        contagem={erro ?? textoDaContagem(resultado)}
+        anuncio={erro ?? textoDaContagem(paraAnunciar)}
+        erro={erro !== null}
+      >
         <Busca sugestoes={sugestoes} info={infoBusca} aoBuscar={buscar} />
 
         <Alternador rotulo="Visualização" opcoes={VISTAS} valor={vista} aoEscolher={escolherVista} />
         {vista === "globe" && (
-          <button type="button" aria-pressed={girando} onClick={alternarGiro} className={`${BOTAO_LARGO} mb-1 text-texto`}>
+          <button type="button" onClick={alternarGiro} className={`${BOTAO_LARGO} mb-1 text-texto`}>
             {girando ? "Pausar rotação" : "Girar globo"}
           </button>
         )}
@@ -302,6 +264,7 @@ export function App() {
         caminho={caminho}
         paleoVisivel={Boolean(paleo.epoca)}
         aoMudar={mudarTempo}
+        aoSoltar={() => setArrastando(false)}
       />
     </>
   );

@@ -13,12 +13,13 @@ interface Props {
   paleoVisivel: boolean; // mostra o crédito dos continentes antigos
   // `arrastando`: a alça ainda está sendo arrastada (o app atualiza o mapa, mas não a URL)
   aoMudar: (de: number, ate: number, arrastando: boolean) => void;
+  aoSoltar: () => void; // terminou de arrastar (ou de ajustar pelo teclado)
 }
 
 const ESCALA = [252, 201, 145, 66];
 const iguais = (a: number, b: number) => Math.abs(a - b) < 0.05;
 
-export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar }: Props) {
+export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar, aoSoltar }: Props) {
   const alcaDe = useRef<HTMLInputElement>(null);
   const alcaAte = useRef<HTMLInputElement>(null);
   // Posição das alças: 0 = 252 Ma (esquerda, mais antigo), 186 = 66 Ma
@@ -26,13 +27,14 @@ export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar }: P
   const tAte = MA_INICIO - ate;
   const tudo = de >= MA_INICIO && ate <= MA_FIM;
 
-  // Soltar a alça (evento nativo "change"; o onChange do React dispara a cada movimento)
-  const aoSoltar = useRef(() => {});
+  // Soltar a alça (evento nativo "change"; o onChange do React dispara a cada movimento).
+  // Só avisa que parou: os valores já chegaram pelo onChange.
+  const aoSoltarRef = useRef(aoSoltar);
   useEffect(() => {
-    aoSoltar.current = () => aoMudar(de, ate, false);
+    aoSoltarRef.current = aoSoltar;
   });
   useEffect(() => {
-    const soltar = () => aoSoltar.current();
+    const soltar = () => aoSoltarRef.current();
     const alcas = [alcaDe.current!, alcaAte.current!];
     for (const a of alcas) a.addEventListener("change", soltar);
     return () => {

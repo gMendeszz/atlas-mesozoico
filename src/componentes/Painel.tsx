@@ -8,7 +8,8 @@ interface Props {
   ref?: Ref<HTMLElement>;
   tema: Tema;
   aoAlternarTema: () => void;
-  contagem: string;
+  contagem: string; // na tela, sempre atualizada
+  anuncio: string; // a mesma contagem pra leitores de tela, sem mudar a cada quadro de um arrasto
   erro: boolean; // a contagem é uma mensagem de erro
   children: ReactNode;
 }
@@ -16,7 +17,7 @@ interface Props {
 // No celular o painel começa recolhido pra não cobrir o mapa
 const comecaAberto = () => !matchMedia("(max-width: 600px)").matches;
 
-export function Painel({ ref, tema, aoAlternarTema, contagem, erro, children }: Props) {
+export function Painel({ ref, tema, aoAlternarTema, contagem, anuncio, erro, children }: Props) {
   const [aberto, setAberto] = useState(comecaAberto);
   const idCorpo = useId();
   const escuro = tema === "escuro";
@@ -37,13 +38,17 @@ export function Painel({ ref, tema, aoAlternarTema, contagem, erro, children }: 
             {escuro ? <IconeSol /> : <IconeLua />}
           </button>
           <button type="button" className={BOTAO_ICONE} aria-expanded={aberto} aria-controls={idCorpo} onClick={() => setAberto(!aberto)}>
-            <span className="sr-only">{aberto ? "Recolher painel" : "Expandir painel"}</span>
+            {/* Nome fixo: o estado (aberto/fechado) quem diz é o aria-expanded */}
+            <span className="sr-only">Painel de controles</span>
             <IconeSeta className={`transition-transform duration-200 motion-reduce:transition-none ${aberto ? "" : "rotate-180"}`} />
           </button>
         </div>
       </div>
-      <p className={`mt-0.5 text-md font-semibold tabular-nums ${erro ? "text-erro" : ""}`} aria-live="polite">
+      <p className={`mt-0.5 text-md font-semibold tabular-nums ${erro ? "text-erro" : ""}`} aria-hidden="true">
         {contagem}
+      </p>
+      <p className="sr-only" aria-live="polite">
+        {anuncio}
       </p>
 
       <div id={idCorpo} hidden={!aberto}>

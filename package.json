@@ -15,7 +15,7 @@
     "test:dados": "vitest run tests/dados-publicados.test.ts"
   },
   "dependencies": {
-    "maplibre-gl": "^6.16.0",
+    "maplibre-gl": "6.16.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
@@ -27,7 +27,7 @@
     "@vitejs/plugin-react": "5.2.0",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
-    "vite": "^6.3.5",
-    "vitest": "^4.1.12"
+    "vite": "6.4.5",
+    "vitest": "4.1.12"
   }
 }
