@@ -6,6 +6,7 @@ import { MA_SPAN } from "./constants";
 import { loadData } from "./data";
 import { LISTS, calculate, filtersToURL, filtersFromURL, clearFilters, hasActiveFilter, type ListField } from "./filters";
 import { sitesForName, searchableNames, searchSummary } from "./search";
+import { sitesForList } from "./site-list";
 import { histogramPath } from "./histogram";
 import { fitToPoints, reducedMotion } from "./map";
 import { hasWebGL } from "./support";
@@ -26,6 +27,7 @@ import { OptionList } from "./components/OptionList";
 import { Panel } from "./components/Panel";
 import { CountrySelect } from "./components/CountrySelect";
 import { About } from "./components/About";
+import { SiteList } from "./components/SiteList";
 
 const CONTINENTS: { value: Continents; text: string }[] = [
   { value: "present", text: "Present-day" },
@@ -140,12 +142,22 @@ export function App() {
       fitPoints(visible);
       return;
     }
-    const [p] = visible;
+    showSite(visible[0]);
+  }
+
+  // Flies to a site and opens its details. `returnFocusTo`: came from the keyboard (site list),
+  // so focus goes into the popup and back to the list when it closes.
+  function showSite(p: Point, returnFocusTo?: HTMLElement) {
+    if (!map) return;
+    closePopup();
+    stopSpin();
     const center = p.geometry.coordinates as [number, number];
-    map.once("moveend", () => openPopup(p.id, center));
+    map.once("moveend", () => openPopup(p.id, center, returnFocusTo));
     // Zoom above clusterMaxZoom (9): the point shows on its own, outside any cluster
     map.easeTo({ center, zoom: Math.max(map.getZoom(), 9.5), duration: reducedMotion.matches ? 0 : 1000 });
   }
+
+  const listedSites = useMemo(() => (result ? sitesForList(result.features, match) : []), [result, match]);
 
   // ---------- Filter changes ----------
   const changeTime = useCallback((from: number, to: number, nowDragging: boolean) => {
@@ -176,8 +188,9 @@ export function App() {
 
       <Panel ref={panelEl} count={error ?? countText(result)} announcement={error ?? countText(toAnnounce)} error={error !== null}>
         <Search suggestions={suggestions} info={searchInfo} onSearch={search} />
+        <SiteList data={data} sites={listedSites} searching={match !== null} onShow={showSite} />
 
-        <p className={`${LABEL} mb-1.5`} id="continents-label">
+        <p className={`${LABEL} mt-3 mb-1.5`} id="continents-label">
           Continents
         </p>
         <SegmentedControl

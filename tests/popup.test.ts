@@ -105,6 +105,14 @@ describe("names published differently from the accepted one", () => {
   });
 });
 
+describe("link to the PBDB", () => {
+  it("points to the collection details page (the old basicCollectionSearch now returns 403)", () => {
+    expect(siteHtml(testData(), 1, defaultFilters())).toContain(
+      'href="https://paleobiodb.org/classic/displayCollectionDetails?collection_no=200"'
+    );
+  });
+});
+
 describe("countryName", () => {
   it("translates the PBDB's own ocean codes (they're not ISO)", () => {
     expect(countryName("O2")).toBe("North Atlantic");

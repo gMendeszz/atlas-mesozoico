@@ -26,6 +26,9 @@ export function useLayers({ mapState, theme, data, result, timeSlice, highlight,
   useEffect(() => {
     if (!map || !result || !styleVersion || ready || !styleReady()) return;
     if (!source(map, "dinos")) addLayers(map, theme, result.features);
+    // Syncing with an external system (MapLibre): the layers were just added to the map, and this
+    // state tells the effects below that they can run. Not derivable during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMapWithLayers(map);
   }, [map, result, styleVersion, ready, styleReady, theme]);
 
@@ -76,7 +79,8 @@ export function useLayers({ mapState, theme, data, result, timeSlice, highlight,
   }, [result]);
 
   return {
-    openPopup: (i: number, coordinates: [number, number]) => popups.current?.open(i, coordinates),
+    openPopup: (i: number, coordinates: [number, number], returnFocusTo?: HTMLElement) =>
+      popups.current?.open(i, coordinates, returnFocusTo),
     closePopup: () => popups.current?.close(),
   };
 }

@@ -7,7 +7,7 @@ import { nRecords } from "./text";
 import type { Data, Filters, Point } from "./types";
 
 export interface Popups {
-  open: (i: number, coordinates: [number, number]) => void;
+  open: (i: number, coordinates: [number, number], returnFocusTo?: HTMLElement) => void;
   close: () => void;
   unmount: () => void;
 }
@@ -20,13 +20,32 @@ export function mountPopups(map: MapLibreMap, data: Data, filters: () => Filters
   const first = (e: MapLayerMouseEvent) => e.features![0] as unknown as Point;
   const coordinates = (p: Point) => p.geometry.coordinates as [number, number];
 
-  function open(i: number, lngLat: [number, number]) {
+  // `returnFocusTo`: opened from the keyboard (site list). Focus moves into the popup so screen
+  // readers read it, Escape closes it, and focus goes back to where it came from.
+  function open(i: number, lngLat: [number, number], returnFocusTo?: HTMLElement) {
     tooltip.remove();
     currentPopup?.remove();
-    currentPopup = new maplibregl.Popup({ offset: 10, maxWidth: "300px" })
+    const popup = new maplibregl.Popup({ offset: 10, maxWidth: "300px" })
       .setLngLat(lngLat)
       .setHTML(siteHtml(data, i, filters()))
       .addTo(map);
+    currentPopup = popup;
+    const content = popup.getElement().querySelector<HTMLElement>(".maplibregl-popup-content")!;
+    content.setAttribute("role", "dialog");
+    content.setAttribute("aria-label", "Site details");
+    content.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") popup.remove();
+    });
+    if (returnFocusTo) {
+      content.tabIndex = -1;
+      content.focus();
+      // Only if focus is still inside the popup (closing by clicking elsewhere shouldn't steal it)
+      popup.on("close", () => {
+        if (!document.activeElement || document.activeElement === document.body || content.contains(document.activeElement)) {
+          returnFocusTo.focus();
+        }
+      });
+    }
   }
 
   const onPointClick = (e: MapLayerMouseEvent) => {

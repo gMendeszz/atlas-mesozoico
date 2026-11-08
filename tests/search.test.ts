@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { sitesForName, searchableNames, searchSummary } from "../src/search";
 import { calculate, defaultFilters } from "../src/filters";
+import { sitesForList } from "../src/site-list";
 import { testData } from "./test-data";
 
 describe("sitesForName", () => {
@@ -84,5 +85,24 @@ describe("searchSummary (text under the field, read by screen readers)", () => {
   it("warns when the filters hide matched sites", () => {
     const match = sitesForName(data, "Dinosauria"); // sites 0 and 2
     expect(searchSummary(data, "Dinosauria", match, points([2]))).toContain("1 site is hidden by the current filters.");
+  });
+});
+
+describe("sitesForList (keyboard and screen-reader alternative to the map)", () => {
+  const data = testData();
+  const features = calculate(data, defaultFilters()).features;
+
+  it("lists the visible sites, most records first", () => {
+    expect(sitesForList(features, null).map((p) => p.id)).toEqual([0, 1, 2]); // 3, 3 and 1 records (tie keeps order)
+  });
+
+  it("with an active search, lists only the matches", () => {
+    expect(sitesForList(features, sitesForName(data, "Dinosauria")).map((p) => p.id)).toEqual([0, 2]);
+  });
+
+  it("doesn't reorder the map's own list (it sorts a copy)", () => {
+    const before = features.map((p) => p.id);
+    sitesForList([...features].reverse(), null);
+    expect(features.map((p) => p.id)).toEqual(before);
   });
 });

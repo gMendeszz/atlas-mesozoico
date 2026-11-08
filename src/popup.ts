@@ -76,7 +76,7 @@ export function siteHtml(data: Data, i: number, f: Filters): string {
     <div class="pop-count">${nRecords(visible)}
       ${hidden ? `<span class="pop-hidden">· +${fmt(hidden)} hidden by filters</span>` : ""}</div>
     <ul class="pop-list">${items}</ul>
-    <a href="https://paleobiodb.org/classic/basicCollectionSearch?collection_no=${encodeURIComponent(S.col[i])}"
+    <a href="https://paleobiodb.org/classic/displayCollectionDetails?collection_no=${encodeURIComponent(S.col[i])}"
        target="_blank" rel="noopener">View collection on the PBDB <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>`;
 }
 
