@@ -2,6 +2,10 @@
 
 Mapa interativo de ocorrências fósseis de dinossauros (252–66 milhões de anos).
 
+**Tecnologias:** React 19 + TypeScript + Tailwind CSS 4, com Vite; mapa em MapLibre GL JS (globo e
+mapa plano). Dados preparados por scripts em Python (só biblioteca padrão). Site estático, sem
+servidor: tudo roda no navegador.
+
 ## Rodar localmente
 
 ```bash
@@ -80,7 +84,7 @@ de 0,7°, chegando a ~15° em casos raros (ex.: Grã-Bretanha no Triássico).
 
 Segue o tema do sistema; o botão de sol/lua no painel troca e a escolha fica salva (escolher o
 mesmo tema do sistema volta a seguir o sistema). Trocar o tema troca o mapa base (OpenFreeMap
-`positron` ↔ `dark`, este com tons ajustados em `src/mapa.js`) e leva junto pontos, busca e
+`positron` ↔ `dark`, este com tons ajustados em `src/mapa.ts`) e leva junto pontos, busca e
 continentes antigos. As cores dos grupos têm uma versão pra cada tema, conferidas com simulação
 de daltonismo e contraste mínimo de 3:1 com o mapa; textos têm contraste de 4,5:1 ou mais.
 
@@ -89,10 +93,12 @@ de daltonismo e contraste mínimo de 3:1 com o mapa; textos têm contraste de 4,
 - **CSP** (Content-Security-Policy) na build, via `vite.config.js`: só scripts do próprio site;
   conexões só com o site e com `tiles.openfreemap.org`. Testado: bloqueia script externo e envio
   de dados pra outro servidor.
-- Todo texto vindo dos dados passa por escape antes de virar HTML (`esc()` em `src/texto.js`).
-- 1 dependência no site (`maplibre-gl`) e 2 só de desenvolvimento (`vite`, `vitest`), versões
-  travadas no `package-lock.json`;
-  `npm audit` sem vulnerabilidades em 2026-11-04. Scripts Python só usam a biblioteca padrão.
+- Textos vindos dos dados: o React escapa sozinho; os popups do mapa (HTML montado fora do React)
+  passam por `esc()` em `src/texto.ts`. Nenhum `dangerouslySetInnerHTML`.
+- 3 dependências no site (`maplibre-gl`, `react`, `react-dom`); as de desenvolvimento são Vite,
+  Vitest, TypeScript, Tailwind e os plugins oficiais. Versões exatas no `package.json` e travadas
+  no `package-lock.json`; instaladas só versões com pelo menos 2 semanas de publicadas.
+  `npm audit` sem vulnerabilidades em 2026-11-07. Scripts Python só usam a biblioteca padrão.
 - Sem cookies, analytics ou rastreamento. `localStorage` guarda só as preferências mapa/globo e tema claro/escuro.
   O mapa base (OpenFreeMap) recebe o IP de quem acessa, como qualquer servidor.
 - Erros de rede, mapa base fora do ar e navegador sem WebGL 2 mostram mensagem em vez de tela vazia.
@@ -101,6 +107,7 @@ de daltonismo e contraste mínimo de 3:1 com o mapa; textos têm contraste de 4,
 
 ```bash
 npm test                                          # site: lógica, segurança e arquivos de dados
+npm run typecheck                                 # tipos do TypeScript (a build também confere)
 python -m unittest discover -s tests -p "test_*.py"   # scripts Python
 ```
 
@@ -121,13 +128,19 @@ Cada teste foi validado reintroduzindo de propósito o bug que ele protege e con
 - `public/data/paleo/<época>.json` — continentes e posições antigas (~150 KB, ~43 KB comprimido; o site só baixa a época em uso)
 - `public/404.html` — página de "não encontrado" (estática, sem JavaScript; tema escuro segue o sistema)
 - `public/tema-inicial.js` — põe o tema claro/escuro antes de a página aparecer (sem "piscar")
-- `src/` — o site:
-  - lógica pura, com testes: `filtros.js` (cálculo de pontos, contagens e histograma),
-    `paleo.js`, `busca.js`, `geo.js`, `popup.js`, `dados.js`, `texto.js`, `histograma.js`,
-    `constantes.js`
-  - mapa e interface: `mapa.js` (MapLibre GL JS + tiles OpenFreeMap), `ui/painel.js`,
-    `ui/filtros.js`, `ui/busca.js`, `ui/popups.js`, `ui/continentes.js`, `tema.js`, `preferencias.js`
-  - `main.js` — só liga as partes
+- `src/` — o site (React + TypeScript):
+  - lógica pura, sem React, com testes: `filtros.ts` (cálculo de pontos, contagens e
+    histograma), `busca.ts`, `paleo.ts`, `geo.ts`, `popup.ts`, `dados.ts`, `texto.ts`,
+    `histograma.ts`, `constantes.ts`; tipos dos dados em `tipos.ts`
+  - mapa (MapLibre, imperativo): `mapa.ts` (camadas, tema do mapa base, enquadramento) e
+    `popups-mapa.ts`
+  - hooks que ligam o mapa ao React: `hooks/useMapa.ts`, `useVista.ts` (globo/plano e
+    rotação), `useEpocaPaleo.ts`, `useTema.ts`
+  - componentes: `componentes/Painel.tsx`, `Busca.tsx`, `ListaDeOpcoes.tsx`, `SeletorPais.tsx`,
+    `LinhaDoTempo.tsx`, `Sobre.tsx`, `Alternador.tsx`
+  - `App.tsx` — estado do app (filtros, busca, dados) e sincronia com o mapa; `main.tsx` — entrada
+  - `estilos.css` — tema do Tailwind (cores claro/escuro como tokens) e o pouco que não dá pra
+    fazer com classes (alças do slider, popups e controles do MapLibre)
 - `tests/` — testes (Vitest pro site, unittest pros scripts)
 - `data/raw/` — cache das respostas das APIs (fora do git)
 
