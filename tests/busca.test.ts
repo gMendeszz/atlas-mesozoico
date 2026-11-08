@@ -29,8 +29,8 @@ describe("locaisDoNome", () => {
 });
 
 describe("busca por formação geológica", () => {
-  it("acha com ou sem a palavra Formação, sem diferenciar maiúsculas", () => {
-    expect([...locaisDoNome(dadosDeTeste(), "Formação Santa Maria").locais]).toEqual([0]);
+  it("acha com ou sem a palavra Formation, sem diferenciar maiúsculas", () => {
+    expect([...locaisDoNome(dadosDeTeste(), "Santa Maria Formation").locais]).toEqual([0]);
     expect([...locaisDoNome(dadosDeTeste(), "santa maria").locais]).toEqual([0]);
   });
 
@@ -59,9 +59,9 @@ describe("nomesBuscaveis (sugestões da busca)", () => {
 
   it('sugere cada formação uma vez, sem o "(?)" de incerta', () => {
     const sugestoes = nomesBuscaveis(dadosDeTeste());
-    expect(sugestoes).toContain("Formação Santa Maria");
-    expect(sugestoes).toContain("Formação Hell Creek");
-    expect(sugestoes.filter((s) => s.startsWith("Formação"))).toHaveLength(2);
+    expect(sugestoes).toContain("Santa Maria Formation");
+    expect(sugestoes).toContain("Hell Creek Formation");
+    expect(sugestoes.filter((s) => s.endsWith(" Formation"))).toHaveLength(2);
   });
 });
 
@@ -71,18 +71,18 @@ describe("resumoDaBusca (texto sob o campo, lido por leitores de tela)", () => {
 
   it("sem texto, sem resumo; sem resultado, avisa", () => {
     expect(resumoDaBusca(dados, "", null, [])).toBe("");
-    expect(resumoDaBusca(dados, "Xyz", locaisDoNome(dados, "Xyz"), [])).toBe("Nenhum fóssil encontrado para “Xyz”.");
+    expect(resumoDaBusca(dados, "Xyz", locaisDoNome(dados, "Xyz"), [])).toBe("No fossils found for “Xyz”.");
   });
 
   it("conta fósseis, locais e incertos, e diz onde ficam", () => {
     const achado = locaisDoNome(dados, "Tyrannosaurus");
     expect(resumoDaBusca(dados, "Tyrannosaurus", achado, pontos([0]))).toBe(
-      "Tyrannosaurus: 1 fóssil em 1 local (1 com identificação incerta). Locais: Rio Grande do Sul, Brasil"
+      "Tyrannosaurus: 1 fossil at 1 site (1 with uncertain identification). Sites: Rio Grande do Sul, Brazil"
     );
   });
 
   it("avisa quando os filtros escondem locais achados", () => {
     const achado = locaisDoNome(dados, "Dinosauria"); // locais 0 e 2
-    expect(resumoDaBusca(dados, "Dinosauria", achado, pontos([2]))).toContain("1 local está oculto pelos filtros atuais.");
+    expect(resumoDaBusca(dados, "Dinosauria", achado, pontos([2]))).toContain("1 site is hidden by the current filters.");
   });
 });

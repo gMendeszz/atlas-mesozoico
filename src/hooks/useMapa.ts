@@ -2,7 +2,7 @@
 // O mapa é imperativo; os componentes reagem a `estiloVersao`, que muda a cada estilo
 // carregado (ao abrir e a cada troca de tema), pra repor dados no mapa novo.
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { carregarEstilo, criarMapa, definirCeu, ehCamadaNossa, nomesEmPortugues, type MapaLibre } from "../mapa";
+import { carregarEstilo, criarMapa, definirCeu, ehCamadaNossa, nomesEmIngles, type MapaLibre } from "../mapa";
 import type { Tema } from "../tipos";
 
 interface Opcoes {
@@ -45,12 +45,12 @@ export function useMapa({ container, linhaTempo, tema, ativo, aoErro }: Opcoes):
       estiloOk = true;
       carregando.current = false;
       camadasBase.current = m.getStyle().layers.map((l) => l.id).filter((id) => !ehCamadaNossa(id));
-      nomesEmPortugues(m);
+      nomesEmIngles(m);
       definirCeu(m, temaCarregado.current);
       setEstiloVersao((v) => v + 1);
     });
     m.on("error", (e) => {
-      if (!estiloOk) aoErroRef.current("Não foi possível carregar o mapa base. Verifique a conexão e recarregue a página.");
+      if (!estiloOk) aoErroRef.current("Couldn’t load the base map. Check your connection and reload the page.");
       console.error(e.error ?? e);
     });
 

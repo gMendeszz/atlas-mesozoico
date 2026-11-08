@@ -38,7 +38,7 @@ export function Busca({ sugestoes, info, aoBuscar }: Props) {
   return (
     <div className="mb-3">
       <label className={`${ROTULO} mb-1`} htmlFor={`${id}-campo`}>
-        Buscar dinossauro ou formação
+        Search dinosaur or formation
       </label>
       <div className="relative">
         <input
@@ -48,7 +48,7 @@ export function Busca({ sugestoes, info, aoBuscar }: Props) {
           list={`${id}-nomes`}
           autoComplete="off"
           spellCheck={false}
-          placeholder="Ex.: Irritator, Morrison"
+          placeholder="e.g. Tyrannosaurus, Morrison"
           aria-describedby={`${id}-info`}
           onInput={(e) => {
             const vazio = !e.currentTarget.value;
@@ -64,7 +64,7 @@ export function Busca({ sugestoes, info, aoBuscar }: Props) {
             className="absolute top-1/2 right-1 size-7 -translate-y-1/2 rounded text-[1.1rem] leading-none text-suave"
           >
             <span aria-hidden="true">×</span>
-            <span className="sr-only">Limpar busca</span>
+            <span className="sr-only">Clear search</span>
           </button>
         )}
       </div>

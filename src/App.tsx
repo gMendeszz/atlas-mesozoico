@@ -28,15 +28,15 @@ import { SeletorPais } from "./componentes/SeletorPais";
 import { Sobre } from "./componentes/Sobre";
 
 const CONTINENTES: { valor: Continentes; texto: string }[] = [
-  { valor: "atuais", texto: "Atuais" },
-  { valor: "antigos", texto: "Antigos" },
+  { valor: "atuais", texto: "Present-day" },
+  { valor: "antigos", texto: "Ancient" },
 ];
 const HISTOGRAMA_VAZIO = new Float64Array(MA_SPAN);
 
 export function App() {
   const [tema, alternarTema] = useTema();
   const [erro, setErro] = useState<string | null>(
-    temWebGL ? null : "Seu navegador não suporta WebGL 2, necessário para o mapa. Tente atualizá-lo ou usar outro navegador."
+    temWebGL ? null : "Your browser doesn’t support WebGL 2, which the map needs. Try updating it or using another browser."
   );
   const mostrarErro = useCallback((mensagem: string) => setErro((atual) => atual ?? mensagem), []);
   const [dados, setDados] = useState<Dados | null>(null);
@@ -72,7 +72,7 @@ export function App() {
       })
       .catch((e: unknown) => {
         console.error(e);
-        if (valendo) mostrarErro("Não foi possível carregar os dados dos fósseis. Recarregue a página.");
+        if (valendo) mostrarErro("Couldn’t load the fossil data. Please reload the page.");
       });
     return () => {
       valendo = false;
@@ -183,10 +183,10 @@ export function App() {
         <Busca sugestoes={sugestoes} info={infoBusca} aoBuscar={buscar} />
 
         <p className={`${ROTULO} mb-1.5`} id="rot-continentes">
-          Continentes
+          Continents
         </p>
         <Alternador
-          rotulo="Continentes"
+          rotulo="Continents"
           rotuloVisivel="rot-continentes"
           opcoes={CONTINENTES}
           valor={f.continentes}
@@ -200,25 +200,25 @@ export function App() {
 
         <ListaDeOpcoes
           id={grupos.campo}
-          legenda="Grupo"
+          legenda="Group"
           opcoes={grupos.opcoes}
           marcados={f.grupos}
           contagens={resultado?.porGrupo ?? null}
           aoMudar={mudarLista("grupos")}
         >
-          <p className={NOTA}>A cor de cada ponto é o grupo com mais fósseis naquele local.</p>
+          <p className={NOTA}>Each dot is colored by the group with the most fossils at that site.</p>
           <details className="mt-1 text-xs text-suave">
-            <summary className="w-fit cursor-pointer text-destaque">O que entra em “Outros”?</summary>
+            <summary className="w-fit cursor-pointer text-destaque">What’s in “Others”?</summary>
             <p className="mt-1 leading-[1.4]">
-              Fósseis identificados só como dinossauro, grupos fora desses três (como os herrerassaurídeos, do brasileiro{" "}
-              <em>Staurikosaurus</em>) e ovos e pegadas sem grupo definido.
+              Fossils identified only as dinosaurs, groups outside these three (such as herrerasaurids), and
+              eggs and footprints with no assigned group.
             </p>
           </details>
         </ListaDeOpcoes>
         <ListaDeOpcoes
           id={tipos.campo}
-          legenda="Tipo de fóssil"
-          recolhivel="masculino"
+          legenda="Fossil type"
+          recolhivel
           opcoes={tipos.opcoes}
           marcados={f.tipos}
           contagens={resultado?.porTipo ?? null}
@@ -226,21 +226,21 @@ export function App() {
         />
         <ListaDeOpcoes
           id={dietas.campo}
-          legenda="Dieta"
-          recolhivel="feminino"
+          legenda="Diet"
+          recolhivel
           opcoes={dietas.opcoes}
           marcados={f.dietas}
           contagens={resultado?.porDieta ?? null}
           aoMudar={mudarLista("dietas")}
         >
-          <p className={NOTA}>A dieta é a do grupo do animal, segundo o PBDB, e não algo observado em cada fóssil.</p>
+          <p className={NOTA}>Diet is that of the animal’s group in the PBDB, not something observed in each fossil.</p>
         </ListaDeOpcoes>
 
         <SeletorPais paises={dados?.paises ?? []} porPais={resultado?.porPais ?? null} valor={f.pais} aoEscolher={escolherPais} />
 
         {temFiltroAtivo(f) && (
           <button type="button" onClick={limpar} className={`${BOTAO_LARGO} mt-3.5 font-semibold text-destaque`}>
-            Limpar filtros
+            Clear filters
           </button>
         )}
 
@@ -270,15 +270,15 @@ export function App() {
 }
 
 function textoDaContagem(r: Resultado | null): string {
-  if (!r) return "Carregando dados…";
-  if (!r.totalFosseis) return "Nenhum fóssil com esses filtros";
-  return `${fmt(r.totalFosseis)} fósseis em ${fmt(r.features.length)} locais`;
+  if (!r) return "Loading data…";
+  if (!r.totalFosseis) return "No fossils match these filters";
+  return `${fmt(r.totalFosseis)} fossils at ${fmt(r.features.length)} sites`;
 }
 
 function textoDoPaleo(paleo: EstadoPaleo, r: Resultado | null): string {
-  if (paleo.erro) return "Não deu pra carregar os continentes antigos. Tente de novo.";
-  if (paleo.carregando) return `Carregando a Terra de ${paleo.t} milhões de anos atrás…`;
-  let texto = `A Terra há ${paleo.t} milhões de anos (meio do intervalo escolhido). Contornos dos continentes atuais, na posição daquela época.`;
-  if (r?.semPosicao) texto += ` ${fmt(r.semPosicao)} fósseis ficam ocultos: o modelo não reconstrói o local deles.`;
+  if (paleo.erro) return "Couldn’t load the ancient continents. Please try again.";
+  if (paleo.carregando) return `Loading Earth at ${paleo.t} million years ago…`;
+  let texto = `Earth ${paleo.t} million years ago (middle of the selected range). Present-day coastlines, shown where they were at that time.`;
+  if (r?.semPosicao) texto += ` ${fmt(r.semPosicao)} fossils are hidden: the model can’t reconstruct their location.`;
   return texto;
 }

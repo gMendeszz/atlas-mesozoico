@@ -1,8 +1,8 @@
 {
-  "name": "Atlas Mesozoico",
-  "short_name": "Atlas Mesozoico",
-  "description": "Mapa interativo de fósseis de dinossauros do Mesozoico, com dados do Paleobiology Database.",
-  "lang": "pt-BR",
+  "name": "Mesozoic Atlas",
+  "short_name": "Mesozoic Atlas",
+  "description": "Interactive map of Mesozoic dinosaur fossils, with data from the Paleobiology Database.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -18,8 +18,8 @@ export class ErroGeral extends Component<{ children: ReactNode }, { erro: boolea
     if (!this.state.erro) return this.props.children;
     return (
       <div role="alert" className={`${CARTAO} absolute top-4 left-4 max-w-[calc(100%-32px)] px-4 py-3.5`}>
-        <h1 className="text-xl font-bold">Atlas Mesozoico</h1>
-        <p className="mt-1 text-md font-semibold text-erro">Algo deu errado ao montar o mapa. Recarregue a página.</p>
+        <h1 className="text-xl font-bold">Mesozoic Atlas</h1>
+        <p className="mt-1 text-md font-semibold text-erro">Something went wrong while building the map. Please reload the page.</p>
       </div>
     );
   }

@@ -56,13 +56,13 @@ export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar, aoS
       >
         <div className="flex min-h-[26px] items-baseline gap-2.5">
           <h2 id="lt-titulo" className={`${ROTULO} max-sm:sr-only`}>
-            Tempo
+            Time
           </h2>
           <output htmlFor="lt-de lt-ate" className="text-md font-semibold tabular-nums max-sm:text-sm">
-            {fmtMa(de)} – {fmtMa(ate)} milhões de anos atrás
+            {fmtMa(de)} – {fmtMa(ate)} million years ago
           </output>
           <span className="text-xs text-suave max-sm:hidden" aria-hidden="true">
-            · altura = quantidade de fósseis
+            · height = number of fossils
           </span>
           {!tudo && (
             <button
@@ -70,7 +70,7 @@ export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar, aoS
               onClick={todoOMesozoico}
               className="ml-auto min-h-[26px] rounded-md px-2 py-0.5 text-sm font-semibold text-destaque max-sm:px-1 max-sm:whitespace-nowrap"
             >
-              Todo o Mesozoico
+              Whole Mesozoic
             </button>
           )}
         </div>
@@ -95,8 +95,8 @@ export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar, aoS
             max={MA_SPAN}
             step="1"
             value={Math.round(tDe)}
-            aria-label="Início do intervalo"
-            aria-valuetext={`${fmtMa(de)} milhões de anos atrás`}
+            aria-label="Range start"
+            aria-valuetext={`${fmtMa(de)} million years ago`}
             onChange={(e) => aoMudar(Math.max(MA_INICIO - +e.target.value, ate + MA_FOLGA), ate, true)}
             // Alças sobrepostas: a que está mais à direita fica por baixo, pra sempre dar pra pegar as duas
             style={{ zIndex: tDe > MA_SPAN / 2 ? 2 : 1 }}
@@ -110,8 +110,8 @@ export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar, aoS
             max={MA_SPAN}
             step="1"
             value={Math.round(tAte)}
-            aria-label="Fim do intervalo"
-            aria-valuetext={`${fmtMa(ate)} milhões de anos atrás`}
+            aria-label="Range end"
+            aria-valuetext={`${fmtMa(ate)} million years ago`}
             onChange={(e) => aoMudar(de, Math.min(MA_INICIO - +e.target.value, de - MA_FOLGA), true)}
             className="alca absolute inset-0 m-0 size-full"
           />
@@ -129,13 +129,13 @@ export function LinhaDoTempo({ ref, de, ate, caminho, paleoVisivel, aoMudar, aoS
           ))}
         </div>
 
-        <div className="mx-[11px] mt-[3px] flex gap-[3px]" role="group" aria-label="Atalhos de período">
+        <div className="mx-[11px] mt-[3px] flex gap-[3px]" role="group" aria-label="Period shortcuts">
           {PERIODOS.map((p) => (
             <button
               key={p.nome}
               type="button"
               aria-pressed={iguais(p.de, de) && iguais(p.ate, ate)}
-              title={`${p.nome}: ${fmtMa(p.de)}–${fmtMa(p.ate)} milhões de anos atrás`}
+              title={`${p.nome}: ${fmtMa(p.de)}–${fmtMa(p.ate)} million years ago`}
               onClick={() => aoMudar(p.de, p.ate, false)}
               style={{ flex: p.de - p.ate }}
               className="min-h-7 min-w-0 overflow-hidden rounded-[5px] bg-trilho px-1 py-0.5 text-sm text-ellipsis whitespace-nowrap text-texto hover:not-aria-pressed:bg-trilho-forte aria-pressed:bg-texto aria-pressed:font-semibold aria-pressed:text-contra"
@@ -162,15 +162,15 @@ function Link({ href, children }: { href: string; children: string }) {
 function Credito({ paleoVisivel }: { paleoVisivel: boolean }) {
   return (
     <footer className="mt-1.5 text-2xs text-suave">
-      Dados:{" "}
+      Data:{" "}
       <a href="https://paleobiodb.org" target="_blank" rel="noopener">
-        Paleobiology Database<span className="sr-only"> (abre em nova aba)</span>
+        Paleobiology Database<span className="sr-only"> (opens in a new tab)</span>
       </a>
       , <Link href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</Link>
       {paleoVisivel && (
         <span>
           {" "}
-          · Continentes antigos: <Link href="https://doi.org/10.5281/zenodo.10596609">PALEOMAP (Scotese 2016)</Link> via{" "}
+          · Ancient continents: <Link href="https://doi.org/10.5281/zenodo.10596609">PALEOMAP (Scotese 2016)</Link> via{" "}
           <Link href="https://gplates.org">GPlates</Link>, CC BY 4.0
         </span>
       )}

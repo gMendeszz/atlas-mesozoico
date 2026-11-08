@@ -1,6 +1,6 @@
 // Preparação dos dados de public/data/dinos.json (formato colunar: ver scripts/baixar_dados.py).
 import { periodoDoMeio } from "./constantes";
-import { nomePais } from "./texto";
+import { IDIOMA, nomePais } from "./texto";
 import type { Dados, DadosBrutos } from "./tipos";
 
 export function prepararDados(d: DadosBrutos): Dados {
@@ -13,10 +13,10 @@ export function prepararDados(d: DadosBrutos): Dados {
     periodo[i] = periodoDoMeio((L.max[i] + L.min[i]) / 2);
   }
 
-  // Países em ordem alfabética (pt-BR); índice 0 do dicionário = sem país (vai pro fim)
+  // Países em ordem alfabética; índice 0 do dicionário = sem país (vai pro fim)
   const paises = d.dic.pais
-    .map((cc, idx) => ({ idx, cc, nome: cc ? nomePais(cc) : "Sem país informado" }))
-    .sort((a, b) => (a.cc ? 0 : 1) - (b.cc ? 0 : 1) || a.nome.localeCompare(b.nome, "pt-BR"));
+    .map((cc, idx) => ({ idx, cc, nome: cc ? nomePais(cc) : "No country given" }))
+    .sort((a, b) => (a.cc ? 0 : 1) - (b.cc ? 0 : 1) || a.nome.localeCompare(b.nome, IDIOMA));
 
   const incertos = d.incertos ?? { j: [], nome: [] };
   const incertoDe = new Map(incertos.j.map((j, k) => [j, incertos.nome[k]]));

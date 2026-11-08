@@ -1,161 +1,186 @@
-# Atlas Mesozoico
+# Mesozoic Atlas
 
-Mapa interativo de ocorrências fósseis de dinossauros (252–66 milhões de anos).
+Interactive map of dinosaur fossil occurrences (252–66 million years ago).
 
-**Tecnologias:** React 19 + TypeScript + Tailwind CSS 4, com Vite; mapa em MapLibre GL JS (globo e
-mapa plano). Dados preparados por scripts em Python (só biblioteca padrão). Site estático, sem
-servidor: tudo roda no navegador.
+**Live site:** https://gmendeszz.github.io/atlas-mesozoico/
 
-## Rodar localmente
+**Stack:** React 19 + TypeScript + Tailwind CSS 4, built with Vite; map rendered with MapLibre GL JS
+(globe and flat map). Data prepared by Python scripts (standard library only). Static site, no
+server: everything runs in the browser.
+
+**Features**
+
+- 22,000+ fossils from the Paleobiology Database, clustered on a draggable globe or a flat map
+- Timeline with a fossil-count histogram, two range handles and period shortcuts
+- Ancient continents: sites and coastlines moved to where they were at the selected time
+  (PALEOMAP model)
+- Filters by group, fossil type (bones, footprints, eggs), diet and country, each showing how many
+  fossils you would get by selecting it
+- Search by species, genus or geological formation
+- Shareable links (filters live in the URL), light and dark themes, keyboard and screen-reader
+  support
+
+Code comments and identifiers are in Portuguese.
+
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abre em http://localhost:5173
+Opens at http://localhost:5173
 
-## Publicar
-
-```bash
-npm run build                                   # pra https://gmendeszz.github.io/atlas-mesozoico/
-SITE_URL=https://meusite.com/ npm run build     # outro endereço (ex.: domínio próprio)
-```
-
-O app funciona em qualquer endereço (caminhos relativos). `SITE_URL` só entra no que precisa de
-endereço completo: prévia ao compartilhar o link (Open Graph), `canonical`, `sitemap.xml`,
-`robots.txt` e os caminhos da página 404, que aparece em qualquer endereço inexistente.
-
-Arquivos de web em `public/`: `favicon.svg` (pegada de T. rex) e `favicon-32.png`, ícones de tela
-inicial em `icones/` (inclusive a versão "maskable", recortável em círculo no Android),
-`manifest.webmanifest` e `previa-social.png` (1200×630, print real do globo). O `robots.txt` e o
-`sitemap.xml` são gerados na build. Num endereço com subpasta (`usuario.github.io/repositorio/`),
-os buscadores só leem o `robots.txt` da raiz do domínio; o `sitemap.xml` pode ser enviado direto
-no Google Search Console.
-
-## Atualizar os dados
-
-Precisa de Python 3 (só biblioteca padrão, sem pip):
+## Build and deploy
 
 ```bash
-python scripts/baixar_dados.py            # usa o cache em data/raw/ se existir
-python scripts/baixar_dados.py --refresh  # baixa tudo de novo do PBDB
+npm run build                                   # for https://gmendeszz.github.io/atlas-mesozoico/
+SITE_URL=https://example.com/ npm run build     # another address (e.g. a custom domain)
 ```
 
-Gera `public/data/dinos.json` (formato compacto: uma tabela de locais e uma de fósseis, com dicionários pros textos; detalhes no topo do script). O script faz 4 requisições (Dinosauria + IDs de
-Theropoda, Sauropodomorpha e Ornithischia, pra classificar o grupo), com pausa entre elas.
+The app works at any address (relative paths). `SITE_URL` is only used where a full address is
+required: the link preview (Open Graph), `canonical`, `sitemap.xml`, `robots.txt` and the paths
+of the 404 page, which can show up at any nonexistent address.
 
-Depois, os continentes antigos (usa a lista de locais do passo anterior):
+Web files in `public/`: `favicon.svg` (a T. rex footprint) and `favicon-32.png`, home-screen icons
+in `icones/` (including a "maskable" version that Android can crop to a circle),
+`manifest.webmanifest` and `previa-social.png` (1200×630, a real screenshot of the globe).
+`robots.txt` and `sitemap.xml` are generated at build time. On an address with a subfolder
+(`user.github.io/repository/`), search engines only read the `robots.txt` at the domain root; the
+`sitemap.xml` can be submitted directly in Google Search Console.
+
+## Updating the data
+
+Requires Python 3 (standard library only, no pip):
 
 ```bash
-python scripts/baixar_paleo.py            # usa o cache em data/raw/paleo/ se existir
-python scripts/baixar_paleo.py --refresh  # baixa tudo de novo do GPlates
+python scripts/baixar_dados.py            # uses the cache in data/raw/ if present
+python scripts/baixar_dados.py --refresh  # downloads everything again from the PBDB
 ```
 
-Pra cada época de 70 a 250 milhões de anos (de 10 em 10), pede ao GPlates Web Service os
-contornos dos continentes e a posição antiga de cada local, no modelo PALEOMAP. São 38
-requisições, com pausa entre elas.
+Generates `public/data/dinos.json` (compact format: one table of sites and one of fossils, with
+dictionaries for text; details at the top of the script). The script makes 4 requests (Dinosauria
+plus the IDs of Theropoda, Sauropodomorpha and Ornithischia, to classify the group), pausing
+between them.
 
-## Qualidade dos dados
-
-Conferência feita em 2026-11-04 (dados brutos × JSON, coordenadas × contornos de países do
-Natural Earth, posições antigas × paleocoordenadas do próprio PBDB, contagens do app × cálculo
-independente). Ajustes aplicados em `scripts/baixar_dados.py`, cada um com o motivo no código:
-
-- **1 coordenada corrigida** (Titem Suwraga, Mongólia): longitude cadastrada como oeste; o
-  próprio texto do PBDB traz a coordenada certa (102° E).
-- **4 locais excluídos** (Uzbequistão, Colômbia, Irã, Canadá): coordenadas sem relação com o
-  lugar descrito e sem dado pra corrigir.
-- **15 fósseis reclassificados como terópodes**: o PBDB tem um segundo táxon "Megalosauridae"
-  (nº 358782) ligado direto a Dinosauria. Regra geral: fóssil sem grupo herda o grupo da sua
-  família, quando a família pertence a um grupo só.
-- **"Outros"** (antes "Indeterminado"): reúne fósseis identificados só como dinossauro, grupos
-  fora dos três principais (ex.: herrerassaurídeos, como o *Staurikosaurus*) e ovos/pegadas.
-- Códigos de oceano do PBDB (O1–O7, ex.: O2 = Atlântico Norte) aparecem com nome.
-- **Pegadas e ovos** (conferência de 2026-11-06): vêm das marcas do PBDB ("I" = icnofóssil,
-  "F" = ovo). 3 gêneros com marca errada foram corrigidos: *Jialingpus* e *Metatetrapous* são
-  pegadas sem a marca "I"; *Shri rapax* é esqueleto, não ovo.
-- **Dieta** é a do táxon no PBDB (inferida pelo grupo, não observada em cada fóssil), resumida
-  em carnívoros, herbívoros, onívoros (qualquer combinação com "omnivore") e piscívoros; 10% sem
-  dado ficam como "sem informação". **Autor e ano** só aparecem pra gênero e espécie, e não em
-  identificações incertas. **Formação**: aspas removidas e "?" do PBDB vira "(?)".
-- **Identificações incertas** (~11%: "cf.", "?", "aff.") aparecem com o texto original da
-  publicação e uma marca "identificação incerta", em vez do nome aceito sozinho.
-
-Limitações conhecidas: ~1% dos locais tem coordenada até ~120 km do lado errado de uma
-fronteira (precisão do registro original); o PBDB usa uma versão mais nova do modelo do
-Scotese (2021) que o GPlates (PALEOMAP 2016) — a diferença mediana entre as duas posições é
-de 0,7°, chegando a ~15° em casos raros (ex.: Grã-Bretanha no Triássico).
-
-## Tema escuro
-
-Segue o tema do sistema; o botão de sol/lua no canto do mapa (abaixo do zoom) troca e a escolha fica salva (escolher o
-mesmo tema do sistema volta a seguir o sistema). Trocar o tema troca o mapa base (OpenFreeMap
-`positron` ↔ `dark`, este com tons ajustados em `src/mapa.ts`) e leva junto pontos, busca e
-continentes antigos. As cores dos grupos têm uma versão pra cada tema, conferidas com simulação
-de daltonismo e contraste mínimo de 3:1 com o mapa; textos têm contraste de 4,5:1 ou mais.
-
-## Segurança e privacidade
-
-- **CSP** (Content-Security-Policy) na build, via `vite.config.js`: só scripts do próprio site;
-  conexões só com o site e com `tiles.openfreemap.org`. Testado: bloqueia script externo e envio
-  de dados pra outro servidor.
-- Textos vindos dos dados: o React escapa sozinho; os popups do mapa (HTML montado fora do React)
-  passam por `esc()` em `src/texto.ts`. Nenhum `dangerouslySetInnerHTML`.
-- 3 dependências no site (`maplibre-gl`, `react`, `react-dom`); as de desenvolvimento são Vite,
-  Vitest, TypeScript, Tailwind e os plugins oficiais. Versões exatas no `package.json` e travadas
-  no `package-lock.json`; instaladas só versões com pelo menos 2 semanas de publicadas.
-  `npm audit` sem vulnerabilidades em 2026-11-07. Scripts Python só usam a biblioteca padrão.
-- Sem cookies, analytics ou rastreamento. `localStorage` guarda só as preferências mapa/globo e tema claro/escuro.
-  O mapa base (OpenFreeMap) recebe o IP de quem acessa, como qualquer servidor.
-- Erros de rede, mapa base fora do ar e navegador sem WebGL 2 mostram mensagem em vez de tela vazia.
-
-## Testes
+Then the ancient continents (uses the site list from the previous step):
 
 ```bash
-npm test                                          # site: lógica, segurança e arquivos de dados
-npm run typecheck                                 # tipos do TypeScript (a build também confere)
-python -m unittest discover -s tests -p "test_*.py"   # scripts Python
+python scripts/baixar_paleo.py            # uses the cache in data/raw/paleo/ if present
+python scripts/baixar_paleo.py --refresh  # downloads everything again from GPlates
 ```
 
-Os testes cobrem regras que, se quebrarem, mostram dado errado ou abrem falha: filtro de tempo
-por sobreposição de faixas, contagens de cada opção, histograma (inclusive faixas que passam do
-Mesozoico), enquadramento na linha de data, escape de HTML, identificações incertas, filtros
-vindos da URL e a busca. `tests/dados-publicados.test.js` confere os arquivos **reais** de
-`public/data` (rode `npm run test:dados` depois de atualizar os dados): sincronia entre
-`dinos.json` e as épocas, códigos de país sem nome, locais excluídos que voltaram etc.
+For each time slice from 70 to 250 million years ago (every 10), it asks the GPlates Web Service
+for the continent outlines and the ancient position of each site, using the PALEOMAP model. That
+is 38 requests, pausing between them.
 
-Cada teste foi validado reintroduzindo de propósito o bug que ele protege e conferindo que falha.
+## Data quality
 
-## Estrutura
+Checked on 2026-11-04 (raw data vs. JSON, coordinates vs. Natural Earth country outlines, ancient
+positions vs. the PBDB's own paleocoordinates, app counts vs. an independent calculation).
+Fixes applied in `scripts/baixar_dados.py`, each with its reason in the code:
 
-- `scripts/baixar_dados.py` — baixa do PBDB e gera o JSON compacto
-- `scripts/baixar_paleo.py` — baixa do GPlates as reconstruções por época
-- `public/data/dinos.json` — dados compactos prontos pro mapa (~1 MB, ~280 KB comprimido)
-- `public/data/paleo/<época>.json` — continentes e posições antigas (~150 KB, ~43 KB comprimido; o site só baixa a época em uso)
-- `public/404.html` — página de "não encontrado" (estática, sem JavaScript; tema escuro segue o sistema)
-- `public/tema-inicial.js` — põe o tema claro/escuro antes de a página aparecer (sem "piscar")
-- `src/` — o site (React + TypeScript):
-  - lógica pura, sem React, com testes: `filtros.ts` (cálculo de pontos, contagens e
-    histograma), `busca.ts`, `paleo.ts`, `geo.ts`, `popup.ts`, `dados.ts`, `texto.ts`,
-    `histograma.ts`, `constantes.ts`; tipos dos dados em `tipos.ts`
-  - mapa (MapLibre, imperativo): `mapa.ts` (camadas, tema do mapa base, enquadramento) e
+- **1 coordinate corrected** (Titem Suwraga, Mongolia): longitude entered as west; the PBDB's own
+  text gives the right coordinate (102° E).
+- **4 sites removed** (Uzbekistan, Colombia, Iran, Canada): coordinates unrelated to the place
+  described and no data to correct them.
+- **15 fossils reclassified as theropods**: the PBDB has a second "Megalosauridae" taxon
+  (no. 358782) attached directly to Dinosauria. General rule: a fossil with no group inherits its
+  family's group, when the family belongs to a single group.
+- **"Others"** (formerly "Indeterminate"): fossils identified only as dinosaurs, groups outside the
+  three main ones (e.g. herrerasaurids) and eggs/footprints.
+- PBDB ocean codes (O1–O7, e.g. O2 = North Atlantic) are shown by name.
+- **Footprints and eggs** (checked on 2026-11-06): taken from the PBDB flags ("I" = ichnofossil,
+  "F" = egg). 3 genera with a wrong flag were corrected: *Jialingpus* and *Metatetrapous* are
+  footprints without the "I" flag; *Shri rapax* is a skeleton, not an egg.
+- **Diet** is the taxon's diet in the PBDB (inferred from the group, not observed in each
+  fossil), summarized as carnivores, herbivores, omnivores (any combination including "omnivore")
+  and piscivores; the 10% with no data show as "unknown". **Author and year** only appear for
+  genera and species, and not for uncertain identifications. **Formation**: quotes removed, and
+  the PBDB's "?" becomes "(?)".
+- **Uncertain identifications** (~11%: "cf.", "?", "aff.") show the original text from the
+  publication and an "uncertain identification" tag, instead of the accepted name alone.
+
+Known limitations: ~1% of sites have coordinates up to ~120 km on the wrong side of a border
+(precision of the original record); the PBDB uses a newer version of Scotese's model (2021) than
+GPlates (PALEOMAP 2016) — the median difference between the two positions is 0.7°, reaching ~15°
+in rare cases (e.g. Great Britain in the Triassic).
+
+## Dark theme
+
+Follows the system theme; the sun/moon button in the map corner (below the zoom buttons) switches
+it and the choice is saved (picking the same theme as the system goes back to following the
+system). Switching themes switches the base map (OpenFreeMap `positron` ↔ `dark`, the latter with
+tones adjusted in `src/mapa.ts`) and carries over the points, search and ancient continents. Group
+colors have a version for each theme, checked with color-blindness simulation and a minimum 3:1
+contrast with the map; text has a contrast of 4.5:1 or more.
+
+## Security and privacy
+
+- **CSP** (Content-Security-Policy) in the build, via `vite.config.ts`: only the site's own
+  scripts; connections only to the site and to `tiles.openfreemap.org`. Tested: it blocks external
+  scripts and sending data to another server.
+- Text from the data: React escapes it automatically; the map popups (HTML built outside React)
+  go through `esc()` in `src/texto.ts`. No `dangerouslySetInnerHTML`.
+- 3 runtime dependencies (`maplibre-gl`, `react`, `react-dom`); development dependencies are
+  Vite, Vitest, TypeScript, Tailwind and the official plugins. Exact versions in `package.json`,
+  locked in `package-lock.json`; only versions published at least 2 weeks earlier were installed.
+  `npm audit` reported no vulnerabilities on 2026-11-07. The Python scripts only use the standard
+  library.
+- No cookies, analytics or tracking. `localStorage` only stores the map/globe and light/dark
+  preferences. The base map (OpenFreeMap) receives the visitor's IP address, like any server.
+- Network errors, a base-map outage and browsers without WebGL 2 show a message instead of a
+  blank page.
+
+## Tests
+
+```bash
+npm test                                          # site: logic, security and data files
+npm run typecheck                                 # TypeScript types (the build also checks)
+python -m unittest discover -s tests -p "test_*.py"   # Python scripts
+```
+
+The tests cover rules that, if broken, would show wrong data or open a security hole: time
+filtering by range overlap, counts for each option, the histogram (including ranges that extend
+past the Mesozoic), fitting bounds across the date line, HTML escaping, uncertain
+identifications, filters from the URL and search. `tests/dados-publicados.test.ts` checks the
+**real** files in `public/data` (run `npm run test:dados` after updating the data): `dinos.json`
+in sync with the time slices, country codes without a name, removed sites that came back, etc.
+
+Each test was validated by deliberately reintroducing the bug it guards against and checking that
+it fails.
+
+## Structure
+
+- `scripts/baixar_dados.py` — downloads from the PBDB and generates the compact JSON
+- `scripts/baixar_paleo.py` — downloads the per-time-slice reconstructions from GPlates
+- `public/data/dinos.json` — compact data ready for the map (~1 MB, ~280 KB compressed)
+- `public/data/paleo/<time>.json` — ancient continents and positions (~150 KB, ~43 KB compressed;
+  the site only downloads the slice in use)
+- `public/404.html` — "not found" page (static, no JavaScript; dark theme follows the system)
+- `public/tema-inicial.js` — sets the light/dark theme before the page appears (no flash)
+- `src/` — the site (React + TypeScript):
+  - pure logic, no React, with tests: `filtros.ts` (points, counts and histogram), `busca.ts`,
+    `paleo.ts`, `geo.ts`, `popup.ts`, `dados.ts`, `texto.ts`, `histograma.ts`, `constantes.ts`;
+    data types in `tipos.ts`
+  - map (MapLibre, imperative): `mapa.ts` (layers, base-map theme, fitting bounds) and
     `popups-mapa.ts`
-  - hooks que ligam o mapa ao React: `hooks/useMapa.ts` (cria o mapa e acompanha o mapa
-    base), `useCamadas.ts` (pontos, continentes antigos, destaque e popups em dia com o estado),
-    `useVista.ts` (globo/plano e rotação), `useEpocaPaleo.ts`, `useTema.ts`
-  - componentes: `componentes/Painel.tsx`, `Busca.tsx`, `ListaDeOpcoes.tsx`, `SeletorPais.tsx`,
-    `LinhaDoTempo.tsx`, `Sobre.tsx`, `Alternador.tsx`, `ControlesDoMapa.tsx` (mapa/globo, rotação e tema)
-  - `App.tsx` — estado do app (filtros, busca, dados) e a tela; `main.tsx` — entrada;
-    `suporte.ts` — confere WebGL 2
-  - `estilos.css` — tema do Tailwind (cores claro/escuro como tokens) e o pouco que não dá pra
-    fazer com classes (alças do slider, popups e controles do MapLibre)
-- `tests/` — testes (Vitest pro site, unittest pros scripts)
-- `data/raw/` — cache das respostas das APIs (fora do git)
+  - hooks connecting the map to React: `hooks/useMapa.ts` (creates the map and tracks the base
+    map), `useCamadas.ts` (keeps points, ancient continents, search highlight and popups in sync
+    with state), `useVista.ts` (globe/flat map and rotation), `useEpocaPaleo.ts`, `useTema.ts`
+  - components: `componentes/Painel.tsx`, `Busca.tsx`, `ListaDeOpcoes.tsx`, `SeletorPais.tsx`,
+    `LinhaDoTempo.tsx`, `Sobre.tsx`, `Alternador.tsx`, `ControlesDoMapa.tsx` (globe/flat map,
+    rotation and theme)
+  - `App.tsx` — app state (filters, search, data) and layout; `main.tsx` — entry point;
+    `suporte.ts` — WebGL 2 check
+  - `estilos.css` — Tailwind theme (light/dark colors as tokens) and the little that can't be done
+    with classes (slider handles, MapLibre popups and controls)
+- `tests/` — tests (Vitest for the site, unittest for the scripts)
+- `data/raw/` — API response cache (not in git)
 
-## Crédito
+## Credits
 
-Dados: [Paleobiology Database](https://paleobiodb.org), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-Continentes antigos: Scotese, C. R. (2016), [PALEOMAP PaleoAtlas for GPlates](https://doi.org/10.5281/zenodo.10596609), CC BY 4.0,
-reconstruídos com o [GPlates Web Service](https://gws.gplates.org) (EarthByte, Universidade de Sydney).
-Mapa base: © OpenFreeMap, OpenMapTiles, OpenStreetMap.
+Data: [Paleobiology Database](https://paleobiodb.org), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Ancient continents: Scotese, C. R. (2016), [PALEOMAP PaleoAtlas for GPlates](https://doi.org/10.5281/zenodo.10596609), CC BY 4.0,
+reconstructed with the [GPlates Web Service](https://gws.gplates.org) (EarthByte, University of Sydney).
+Base map: © OpenFreeMap, OpenMapTiles, OpenStreetMap.

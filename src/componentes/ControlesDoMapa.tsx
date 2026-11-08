@@ -33,21 +33,21 @@ export function ControlesDoMapa({ vista, aoTrocarVista, girando, aoAlternarGiro,
   return (
     <div
       role="group"
-      aria-label="Controles do mapa"
+      aria-label="Map controls"
       // Mesmo fundo do zoom do MapLibre: branco no claro, o fundo do tema no escuro (ver estilos.css)
       // top: abaixo do zoom (10 px de margem + 2 botões de 29 px + 10 px de espaço)
       className="absolute top-[78px] right-[10px] flex flex-col overflow-hidden rounded bg-superficie escuro:bg-fundo shadow-[0_0_0_2px_rgb(0_0_0/0.1)]"
     >
       {/* Mostra o ícone do destino: no globo, o mapa plano; no plano, o globo */}
-      <Botao rotulo={globo ? "Ver como mapa plano" : "Ver como globo"} onClick={aoTrocarVista}>
+      <Botao rotulo={globo ? "Switch to flat map" : "Switch to globe"} onClick={aoTrocarVista}>
         {globo ? <IconeMapaPlano /> : <IconeGlobo />}
       </Botao>
       {globo && (
-        <Botao rotulo={girando ? "Pausar rotação" : "Girar globo"} onClick={aoAlternarGiro}>
+        <Botao rotulo={girando ? "Pause rotation" : "Spin globe"} onClick={aoAlternarGiro}>
           {girando ? <IconePausa /> : <IconeGirar />}
         </Botao>
       )}
-      <Botao rotulo="Tema escuro" aria-pressed={tema === "escuro"} onClick={aoAlternarTema}>
+      <Botao rotulo="Dark theme" aria-pressed={tema === "escuro"} onClick={aoAlternarTema}>
         {tema === "escuro" ? <IconeSol /> : <IconeLua />}
       </Botao>
     </div>

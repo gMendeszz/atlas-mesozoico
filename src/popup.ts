@@ -7,7 +7,7 @@ import { fossilVisivel } from "./filtros";
 import type { Dados, Filtros } from "./tipos";
 
 const TEXTO_INCERTO =
-  "A publicação original não tem certeza da identificação (cf. = parecido com; ? = duvidoso; aff. = aparentado)";
+  "The original publication is unsure of this identification (cf. = compare with; ? = doubtful; aff. = related to)";
 
 // Um fóssil da lista: nome (com autor e ano), família e marcas de tipo e de incerteza
 function itemDoFossil(dados: Dados, j: number): string {
@@ -24,7 +24,7 @@ function itemDoFossil(dados: Dados, j: number): string {
 
   let marcas = "";
   if (tipo.curto) marcas += ` <small class="tipo-fossil">${tipo.curto}</small>`;
-  if (incerto) marcas += ` <small class="incerto" title="${TEXTO_INCERTO}">identificação incerta</small>`;
+  if (incerto) marcas += ` <small class="incerto" title="${TEXTO_INCERTO}">uncertain identification</small>`;
   return `<li><span class="bola" style="--cor:${g.cor};--cor-escura:${g.corEscura}" title="${g.nome}"></span>
       <span><em>${esc(nome)}</em>${autor ? ` <span class="autor">${esc(autor)}</span>` : ""}${familia ? ` <small>${esc(familia)}</small>` : ""}${marcas}</span></li>`;
 }
@@ -46,19 +46,19 @@ export function htmlDoLocal(dados: Dados, i: number, f: Filtros): string {
   const ocultos = L.n[i] - visiveis;
 
   // No modo de continentes antigos, deixa claro que o nome é da localização atual
-  const prefixo = f.continentes === "antigos" ? "Hoje: " : "";
-  return `<strong class="pop-lugar">${prefixo}${esc(lugar || "Local sem nome")}</strong>
+  const prefixo = f.continentes === "antigos" ? "Today: " : "";
+  return `<strong class="pop-lugar">${prefixo}${esc(lugar || "Unnamed site")}</strong>
     <div>${PERIODOS[periodo[i]].nome} · ${esc(dic.intervalo[L.intervalo[i]])}</div>
-    <div>${fmt(L.max[i])}–${fmt(L.min[i])} milhões de anos</div>
-    ${formacao ? `<div>Formação ${esc(formacao)}</div>` : ""}
+    <div>${fmt(L.max[i])}–${fmt(L.min[i])} million years ago</div>
+    ${formacao ? `<div>${esc(formacao)} Formation</div>` : ""}
     <div class="pop-n">${nFosseis(visiveis)}
-      ${ocultos ? `<span class="pop-ocultos">· +${fmt(ocultos)} escondidos pelos filtros</span>` : ""}</div>
+      ${ocultos ? `<span class="pop-ocultos">· +${fmt(ocultos)} hidden by filters</span>` : ""}</div>
     <ul class="pop-lista">${itens}</ul>
     <a href="https://paleobiodb.org/classic/basicCollectionSearch?collection_no=${encodeURIComponent(L.col[i])}"
-       target="_blank" rel="noopener">Ver coleção no PBDB <span aria-hidden="true">↗</span><span class="sr-only">(abre em nova aba)</span></a>`;
+       target="_blank" rel="noopener">View collection on the PBDB <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a>`;
 }
 
 // Resumo curto ao passar o mouse sobre um local
 export function htmlDica(dados: Dados, i: number, n: number): string {
-  return `<strong>${esc(lugarDoLocal(dados, i) || "Local sem nome")}</strong><br>${nFosseis(n)} · clique para ver`;
+  return `<strong>${esc(lugarDoLocal(dados, i) || "Unnamed site")}</strong><br>${nFosseis(n)} · click for details`;
 }
