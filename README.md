@@ -1,5 +1,7 @@
 # Mesozoic Atlas
 
+[![CI](https://github.com/gMendeszz/atlas-mesozoico/actions/workflows/ci.yml/badge.svg)](https://github.com/gMendeszz/atlas-mesozoico/actions/workflows/ci.yml)
+
 Interactive map of dinosaur fossil occurrences (252–66 million years ago).
 
 **Live site:** https://gmendeszz.github.io/atlas-mesozoico/
@@ -38,6 +40,11 @@ npm run dev
 Opens at http://localhost:5173
 
 ## Build and deploy
+
+Every push and pull request runs `.github/workflows/ci.yml`: types, lint, the site and Python
+tests, and the build. On `main`, if everything passes, the built site is published to GitHub
+Pages (Settings → Pages → Source: GitHub Actions). The workflow only has read access to the
+repository; the deploy job alone can write to Pages. To build locally:
 
 ```bash
 npm run build                                   # for https://gmendeszz.github.io/atlas-mesozoico/

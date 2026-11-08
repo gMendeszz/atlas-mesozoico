@@ -1,0 +1,67 @@
+# Checks every push and pull request (types, lint, tests, build) and, on main, publishes the
+# site to GitHub Pages. Publishing only happens if all the checks pass.
+#
+# Actions are pinned to the full commit SHA of an official release (the tag is in the comment):
+# a tag can be moved to other code, a commit SHA can't. Dependabot keeps them up to date.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: the jobs can only read the repository unless they ask for more
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Types, lint, tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # the token isn't left in .git for the later steps
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      # Exact versions from package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      # The data scripts' tests (standard library only; Python comes with the runner)
+      - run: python3 -m unittest discover -s tests -p "test_*.py"
+      - run: npm run build
+
+      - name: Keep the built site for the deploy job
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: dist
+
+  deploy:
+    name: Publish to GitHub Pages
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only this job can publish, and only to Pages
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # One deploy at a time; a newer push doesn't cancel a deploy already running
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
