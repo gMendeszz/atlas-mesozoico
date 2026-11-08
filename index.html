@@ -8,6 +8,11 @@
     <!-- The SITE_URL placeholder (between % signs) becomes the site's public address (see vite.config.ts) -->
     <link rel="canonical" href="%SITE_URL%" />
 
+    <!-- Opens the connection to the base-map server right away, in parallel with the rest of the
+         page (MapLibre only asks for it after its JavaScript runs). crossorigin: MapLibre's
+         requests are CORS, and only a CORS preconnect gets reused. -->
+    <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin />
+
     <!-- First of all: sets the right theme (light/dark) without the page flashing -->
     <script src="initial-theme.js"></script>
     <meta name="theme-color" content="#fbf8f2" />

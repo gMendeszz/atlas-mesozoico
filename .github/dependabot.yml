@@ -1,0 +1,23 @@
+# Dependabot: opens pull requests to update dependencies. The tests run on each PR, so an
+# update only gets in if everything still passes.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Only propose versions published at least 14 days ago (a compromised release is usually
+    # caught and pulled within days). Security fixes come separately, through Dependabot alerts.
+    cooldown:
+      default-days: 14
+    groups:
+      # Development tools (Vite, Vitest, ESLint, TypeScript...) in a single weekly PR
+      dev-tools:
+        dependency-type: "development"
+  # GitHub Actions used by the workflows (once there are any)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 14

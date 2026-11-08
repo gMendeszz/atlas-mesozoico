@@ -4,6 +4,13 @@ Interactive map of dinosaur fossil occurrences (252–66 million years ago).
 
 **Live site:** https://gmendeszz.github.io/atlas-mesozoico/
 
+![Mesozoic Atlas in the dark theme: a globe with clustered fossil sites, the filter panel and the timeline](docs/screenshot-dark.png)
+
+<p>
+  <img src="docs/time-travel.png" width="49%" alt="Animation: the continents and fossil sites moving from the Triassic to the Jurassic and the Cretaceous">
+  <img src="docs/screenshot-ancient-light.png" width="49%" alt="Light theme with ancient continents: North America and Europe joined in the Jurassic">
+</p>
+
 **Stack:** React 19 + TypeScript + Tailwind CSS 4, built with Vite; map rendered with MapLibre GL JS
 (globe and flat map). Data prepared by Python scripts (standard library only). Static site, no
 server: everything runs in the browser.
@@ -17,6 +24,7 @@ server: everything runs in the browser.
 - Filters by group (theropods, birds, sauropodomorphs, ornithischians), fossil type (bones,
   footprints, eggs), diet and country, each showing how many records you would get by selecting it
 - Search by species, genus or geological formation
+- A keyboard and screen-reader friendly list of the sites, as an alternative to the map
 - Shareable links (filters live in the URL), light and dark themes, keyboard and screen-reader
   support
 
@@ -136,10 +144,15 @@ contrast of 4.5:1 or more.
 - Text from the data: React escapes it automatically; the map popups (HTML built outside React)
   go through `esc()` in `src/text.ts`. No `dangerouslySetInnerHTML`.
 - 3 runtime dependencies (`maplibre-gl`, `react`, `react-dom`); development dependencies are
-  Vite, Vitest, TypeScript, Tailwind and the official plugins. Exact versions in `package.json`,
-  locked in `package-lock.json`; only versions published at least 2 weeks earlier were installed.
-  `npm audit` reported no vulnerabilities on 2026-11-07. The Python scripts only use the standard
-  library.
+  Vite, Vitest, TypeScript, Tailwind, ESLint and the official plugins. Exact versions in
+  `package.json`, locked in `package-lock.json`; only versions published at least 2 weeks earlier
+  are installed, and Dependabot (`.github/dependabot.yml`) proposes updates with the same 14-day
+  wait. `npm audit --omit=dev` (what ships with the site) reports no vulnerabilities on
+  2026-11-07. The full `npm audit` lists one moderate advisory in `minimatch`
+  ([GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249)), used inside ESLint
+  only on the developer's machine with the project's own patterns; the fix (11.0.1) is a major
+  version published on 2026-10-27, so it waits for ESLint to adopt it. The Python scripts only use
+  the standard library.
 - No cookies, analytics or tracking. `localStorage` only stores the map/globe and light/dark
   preferences. The base map (OpenFreeMap) receives the visitor's IP address, like any server.
 - Network errors, a base-map outage and browsers without WebGL 2 show a message instead of a
@@ -150,6 +163,7 @@ contrast of 4.5:1 or more.
 ```bash
 npm test                                          # site: logic, security and data files
 npm run typecheck                                 # TypeScript types (the build also checks)
+npm run lint                                      # ESLint, including the React hooks rules
 python -m unittest discover -s tests -p "test_*.py"   # Python scripts
 ```
 
@@ -174,14 +188,14 @@ it fails.
 - `public/initial-theme.js` — sets the light/dark theme before the page appears (no flash)
 - `src/` — the site (React + TypeScript):
   - pure logic, no React, with tests: `filters.ts` (points, counts and histogram), `search.ts`,
-    `paleo.ts`, `geo.ts`, `popup.ts`, `data.ts`, `text.ts`, `histogram.ts`, `constants.ts`;
+    `site-list.ts`, `paleo.ts`, `geo.ts`, `popup.ts`, `data.ts`, `text.ts`, `histogram.ts`, `constants.ts`;
     data types in `types.ts`
   - map (MapLibre, imperative): `map.ts` (layers, base-map theme, fitting bounds) and
     `map-popups.ts`
   - hooks connecting the map to React: `hooks/useMap.ts` (creates the map and tracks the base
     map), `useLayers.ts` (keeps points, ancient continents, search highlight and popups in sync
     with state), `useView.ts` (globe/flat map and rotation), `useTimeSlice.ts`, `useTheme.ts`
-  - components: `components/Panel.tsx`, `Search.tsx`, `OptionList.tsx`, `CountrySelect.tsx`,
+  - components: `components/Panel.tsx`, `Search.tsx`, `SiteList.tsx`, `OptionList.tsx`, `CountrySelect.tsx`,
     `Timeline.tsx`, `About.tsx`, `SegmentedControl.tsx`, `MapControls.tsx` (globe/flat map,
     rotation and theme), `ErrorBoundary.tsx`
   - `App.tsx` — app state (filters, search, data) and layout; `main.tsx` — entry point;
@@ -189,6 +203,7 @@ it fails.
   - `styles.css` — Tailwind theme (light/dark colors as tokens) and the little that can't be done
     with classes (slider handles, MapLibre popups and controls)
 - `tests/` — tests (Vitest for the site, unittest for the scripts)
+- `docs/` — README screenshots (not part of the site)
 - `data/raw/` — API response cache (not in git)
 
 ## Credits
