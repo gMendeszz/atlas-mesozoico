@@ -33,6 +33,7 @@ describe("dinos.json", () => {
     check(data.fossils.name, data.dict.name);
     check(data.fossils.family, data.dict.family);
     check(raw.uncertain!.name, data.dict.original_name);
+    check(raw.published!.name, data.dict.original_name);
     check(S.formation, data.dict.formation);
     check(data.fossils.author, data.dict.author);
     check(data.fossils.type, TYPES);
@@ -67,10 +68,16 @@ describe("dinos.json", () => {
     expect(noResult).toEqual([]);
   });
 
-  it("uncertain identifications point to fossils that exist, without repeats", () => {
-    const j = raw.uncertain!.j;
-    expect(new Set(j).size).toBe(j.length);
-    expect(Math.max(...j)).toBeLessThan(data.fossils.name.length);
+  it("uncertain and published names point to records that exist, without repeats or overlap", () => {
+    const uncertain = raw.uncertain!.j;
+    const published = raw.published!.j;
+    expect(new Set([...uncertain, ...published]).size).toBe(uncertain.length + published.length);
+    expect(Math.max(...uncertain, ...published)).toBeLessThan(data.fossils.name.length);
+  });
+
+  it("birds are their own group in the published data", () => {
+    const birds = GROUPS.findIndex((g) => g.key === "aves");
+    expect(data.fossils.group.filter((g) => g === birds).length).toBeGreaterThan(0);
   });
 });
 

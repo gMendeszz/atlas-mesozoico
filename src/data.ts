@@ -18,10 +18,9 @@ export function prepareData(d: RawData): Data {
     .map((cc, idx) => ({ idx, cc, name: cc ? countryName(cc) : "No country given" }))
     .sort((a, b) => (a.cc ? 0 : 1) - (b.cc ? 0 : 1) || a.name.localeCompare(b.name, LOCALE));
 
-  const uncertain = d.uncertain ?? { j: [], name: [] };
-  const uncertainOf = new Map(uncertain.j.map((j, k) => [j, uncertain.name[k]]));
+  const byRecord = (list?: { j: number[]; name: number[] }) => new Map((list?.j ?? []).map((j, k) => [j, list!.name[k]]));
 
-  return { ...d, start, period, countries, uncertainOf };
+  return { ...d, start, period, countries, uncertainOf: byRecord(d.uncertain), publishedOf: byRecord(d.published) };
 }
 
 // "State, Country" of a site (present-day name of the place)

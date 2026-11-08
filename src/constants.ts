@@ -13,19 +13,23 @@ export interface FossilType extends Option {
 }
 
 // Same order as meta.groups in the JSON (the index is the group code).
-// Okabe-Ito palette colors, designed to be distinguishable by people with color blindness;
-// `darkColor` is the lighter version for the dark theme. Checked with deuteranopia, protanopia
-// and tritanopia simulation (no pair looks alike) and ≥ 3:1 contrast with the map backgrounds in
-// both themes. The "Others" gray is dark on purpose: a mid gray looks like the green to deuteranopes.
+// Colors based on the Okabe-Ito palette, designed to be distinguishable by people with color
+// blindness; `darkColor` is the lighter version for the dark theme. Checked with deuteranopia,
+// protanopia and tritanopia simulation (no pair looks alike) and ≥ 3:1 contrast with the point's
+// outline (white in light mode, dark in dark mode). The "Others" gray is dark on purpose: a mid
+// gray looks like the green to deuteranopes. The bird plum was chosen by searching for the shade
+// most distinct from the other four under all three simulations.
 export const GROUPS: Group[] = [
   { key: "theropoda", name: "Theropods", color: "#d55e00", darkColor: "#f07f3c" },
+  // Birds are theropods too; here they get their own group (see scripts/fetch_data.py)
+  { key: "aves", name: "Birds", color: "#661a5e", darkColor: "#b85399" },
   { key: "sauropodomorpha", name: "Sauropodomorphs", color: "#009e73", darkColor: "#3fd0a0" },
   { key: "ornithischia", name: "Ornithischians", color: "#0072b2", darkColor: "#5aa9e6" },
   // Identified only as dinosaurs, groups outside the three above (e.g. herrerasaurids),
   // and eggs/footprints with no assigned group
   { key: "others", name: "Others", color: "#5f574d", darkColor: "#857a6c" },
 ];
-export const OTHERS = 3;
+export const OTHERS = 4;
 
 // Same order as meta.types and meta.diets in the JSON (see scripts/fetch_data.py)
 export const TYPES: FossilType[] = [

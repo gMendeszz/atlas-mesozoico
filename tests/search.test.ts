@@ -71,13 +71,13 @@ describe("searchSummary (text under the field, read by screen readers)", () => {
 
   it("no text, no summary; no result, says so", () => {
     expect(searchSummary(data, "", null, [])).toBe("");
-    expect(searchSummary(data, "Xyz", sitesForName(data, "Xyz"), [])).toBe("No fossils found for “Xyz”.");
+    expect(searchSummary(data, "Xyz", sitesForName(data, "Xyz"), [])).toBe("No fossil records found for “Xyz”.");
   });
 
   it("counts fossils, sites and uncertain ones, and says where they are", () => {
     const match = sitesForName(data, "Tyrannosaurus");
     expect(searchSummary(data, "Tyrannosaurus", match, points([0]))).toBe(
-      "Tyrannosaurus: 1 fossil at 1 site (1 with uncertain identification). Sites: Rio Grande do Sul, Brazil"
+      "Tyrannosaurus: 1 fossil record at 1 site (1 with uncertain identification). Sites: Rio Grande do Sul, Brazil"
     );
   });
 

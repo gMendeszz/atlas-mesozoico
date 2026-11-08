@@ -14,9 +14,15 @@ Output format (columnar, to keep it small and fast to read):
   dict     lists of unique strings; the columns store the index (0 = empty)
   sites    one entry per collection site (coordinates, age, country, geological
            formation...); "n" = how many fossils the site has
-  fossils  one entry per fossil, grouped by site in the same order as "sites"
-           (the first n[0] belong to site 0, and so on); group, type and diet
-           are indexes into meta.groups/types/diets
+  fossils  one entry per fossil record (PBDB "occurrence": one taxon at one site, as
+           reported in a publication; it may be one tooth or a whole skeleton),
+           grouped by site in the same order as "sites" (the first n[0] belong to
+           site 0, and so on); group, type and diet are indexes into
+           meta.groups/types/diets
+  uncertain  records with an uncertain identification: j (position) and name (the
+             publication's original text, in dict.original_name)
+  published  records published under another name than the accepted one (a synonym,
+             or a more specific label like "indet. A"): j and name, same format
 """
 
 import argparse
@@ -37,10 +43,13 @@ CACHE = ROOT / "data" / "raw"
 OUTPUT = ROOT / "public" / "data" / "dinos.json"
 
 # Main groups, in the index order used in the JSON.
+# Birds (Aves) are theropods, so their records are also in the Theropoda list; Aves comes after
+# Theropoda here so it wins (see classify_groups) and birds get their own group.
 # Fossils that fall in none of them become "others": identified only as Dinosauria/Saurischia,
-# groups outside these three (e.g. Herrerasauridae) and eggs/footprints with no assigned group.
+# groups outside these (e.g. Herrerasauridae) and eggs/footprints with no assigned group.
 GROUPS = {
     "theropoda": "Theropoda",
+    "aves": "Aves",
     "sauropodomorpha": "Sauropodomorpha",
     "ornithischia": "Ornithischia",
 }
@@ -63,6 +72,9 @@ DIETS = ["carnivore", "herbivore", "omnivore", "piscivore", "unknown"]
 # Uncertain-identification qualifiers used in the literature: "?", "cf." (compare with),
 # "aff." (related to) and names in quotes (informal)
 UNCERTAIN_QUALIFIER = re.compile(r'\?|\bcf\.|\baff\.|"')
+
+# Suffixes that say nothing beyond the accepted name ("Theropoda indet." is just "Theropoda")
+TRIVIAL_SUFFIXES = {"indet.", "indet", "sp.", "sp", "spp.", "indet. indet.", "sp. indet."}
 
 # Coordinate errors found while checking the data (2026-11-04).
 # Fixed only when the PBDB record itself has the right coordinate in its text.
@@ -161,6 +173,30 @@ def format_author(text):
     return re.sub(r"\s(\d{4})(\)?)$", r", \1\2", (text or "").strip())
 
 
+def published_name(identified, accepted):
+    """The name a record was published under, when it says more than the accepted name:
+    a synonym or recombination ("Gorgosaurus sternbergi" is now "Gorgosaurus libratus") or a
+    more specific label ("Theropoda indet. A", told apart from "indet. B" at the same site).
+    Returns "" when it adds nothing ("Theropoda indet.", "Tyrannosaurus rex n. sp.")."""
+    clean = re.sub(r"\s*\bn\. (gen|sp|subsp)\.", "", identified or "")
+    clean = re.sub(r"\s+", " ", clean.replace("<", "").replace(">", "")).strip()
+    if not clean or clean == accepted:
+        return ""
+    if clean.startswith(accepted + " ") and clean[len(accepted) + 1:] in TRIVIAL_SUFFIXES:
+        return ""
+    return clean
+
+
+def classify_groups(ids_by_group):
+    """occurrence_no -> group key. Later groups in the dict win, so a bird (in both the
+    Theropoda and Aves lists) ends up as "aves"."""
+    group_by_occ = {}
+    for key, records in ids_by_group.items():
+        for r in records:
+            group_by_occ[r["occurrence_no"]] = key
+    return group_by_occ
+
+
 def inherit_group_from_family(records, group_by_occ):
     """Fossils with no group whose family, in the rest of the data, belongs to ONE single group
     inherit that group. Fixes duplicated taxa in the PBDB (e.g. a second "Megalosauridae",
@@ -234,16 +270,15 @@ def main():
     print(f"  {len(records)} records")
 
     print("2/2 IDs per group (for classification)")
-    group_by_occ = {}
+    ids_by_group = {}
     for key, taxon in GROUPS.items():
-        ids = fetch(
+        ids_by_group[key] = fetch(
             f"ids_{key}",
             {"base_name": taxon, "interval": "Mesozoic", "vocab": "pbdb"},
             args.refresh,
         )
-        for r in ids:
-            group_by_occ[r["occurrence_no"]] = key
-        print(f"  {taxon}: {len(ids)}")
+        print(f"  {taxon}: {len(ids_by_group[key])}")
+    group_by_occ = classify_groups(ids_by_group)
 
     inherited = inherit_group_from_family(records, group_by_occ)
     print(f"  group inherited from family: {inherited}")
@@ -262,6 +297,8 @@ def main():
     # j = the fossil's position in the list; name = index of the original text in dic["original_name"]
     # (separate dictionary: dic["name"] only has accepted names, which are the searchable ones)
     uncertain = {"j": [], "name": []}
+    # Published under another name (synonym or a more specific label): same format
+    published = {"j": [], "name": []}
 
     for col in sorted(by_site):
         regs = by_site[col]
@@ -293,9 +330,13 @@ def main():
             useful_rank = f.get("accepted_rank") in ("species", "genus", "subgenus")
             fossils["author"].append(dic["author"](format_author(f.get("accepted_attr")) if useful_rank else ""))
             original = f.get("identified_name") or ""
+            j = len(fossils["name"]) - 1
             if UNCERTAIN_QUALIFIER.search(original):
-                uncertain["j"].append(len(fossils["name"]) - 1)
+                uncertain["j"].append(j)
                 uncertain["name"].append(dic["original_name"](original))
+            elif pub := published_name(original, f.get("accepted_name") or ""):
+                published["j"].append(j)
+                published["name"].append(dic["original_name"](pub))
 
     output = {
         "meta": {
@@ -317,6 +358,7 @@ def main():
         "sites": sites,
         "fossils": fossils,
         "uncertain": uncertain,
+        "published": published,
     }
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
@@ -328,7 +370,8 @@ def main():
     print(f"\nSaved: {OUTPUT.relative_to(ROOT)} ({OUTPUT.stat().st_size / 1e6:.2f} MB)")
     print(f"  {len(sites['col'])} sites, {len(fossils['name'])} fossils "
           f"({dropped} dropped with no coordinates/age)")
-    print(f"  uncertain identifications (cf., ?, aff.): {len(uncertain['j'])}")
+    print(f"  uncertain identifications (cf., ?, aff.): {len(uncertain['j'])}; "
+          f"published under another name: {len(published['j'])}")
     for column, names in (("group", GROUP_ORDER), ("type", TYPES), ("diet", DIETS)):
         print(f"  {column}: " + ", ".join(f"{n} {fossils[column].count(i)}" for i, n in enumerate(names)))
     print(f"  sites with a formation: {sum(1 for x in sites['formation'] if x)} of {len(sites['col'])}; "

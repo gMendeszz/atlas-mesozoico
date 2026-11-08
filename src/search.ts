@@ -1,6 +1,6 @@
 // Search by dinosaur name or geological formation (pure logic; the UI is in components/Search.tsx).
 import { placeOfSite } from "./data";
-import { LOCALE, fmt, nFossils } from "./text";
+import { LOCALE, fmt, nRecords } from "./text";
 import type { Data, Point } from "./types";
 
 export interface Match {
@@ -79,9 +79,9 @@ function sitesForFormation(data: Data, target: string): Match | null {
 // `visible`: the matched sites that are on the map right now (respecting the filters).
 export function searchSummary(data: Data, text: string, match: Match | null, visible: Point[]): string {
   if (!text) return "";
-  if (!match?.sites.size) return `No fossils found for “${text}”.`;
+  if (!match?.sites.size) return `No fossil records found for “${text}”.`;
   const n = match.sites.size;
-  let info = `${text}: ${nFossils(match.fossils)} at ${n === 1 ? "1 site" : `${fmt(n)} sites`}`;
+  let info = `${text}: ${nRecords(match.fossils)} at ${n === 1 ? "1 site" : `${fmt(n)} sites`}`;
   if (match.uncertain) info += ` (${fmt(match.uncertain)} with uncertain identification)`;
   if (visible.length) {
     const places = [...new Set(visible.map((p) => placeOfSite(data, p.id)).filter(Boolean))];

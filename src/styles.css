@@ -224,6 +224,10 @@
 .pop-list small {
   color: var(--color-muted);
 }
+.pop-list .repeat {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 /* "footprint", "egg" and "uncertain identification" tags */
 .fossil-type,
 .uncertain {

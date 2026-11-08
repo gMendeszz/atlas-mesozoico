@@ -10,12 +10,12 @@ server: everything runs in the browser.
 
 **Features**
 
-- 22,000+ fossils from the Paleobiology Database, clustered on a draggable globe or a flat map
-- Timeline with a fossil-count histogram, two range handles and period shortcuts
+- 22,000+ fossil records from the Paleobiology Database, clustered on a draggable globe or a flat map
+- Timeline with a histogram of records, two range handles and period shortcuts
 - Ancient continents: sites and coastlines moved to where they were at the selected time
   (PALEOMAP model)
-- Filters by group, fossil type (bones, footprints, eggs), diet and country, each showing how many
-  fossils you would get by selecting it
+- Filters by group (theropods, birds, sauropodomorphs, ornithischians), fossil type (bones,
+  footprints, eggs), diet and country, each showing how many records you would get by selecting it
 - Search by species, genus or geological formation
 - Shareable links (filters live in the URL), light and dark themes, keyboard and screen-reader
   support
@@ -57,9 +57,9 @@ python scripts/fetch_data.py --refresh  # downloads everything again from the PB
 ```
 
 Generates `public/data/dinos.json` (compact format: one table of sites and one of fossils, with
-dictionaries for text; details at the top of the script). The script makes 4 requests (Dinosauria
-plus the IDs of Theropoda, Sauropodomorpha and Ornithischia, to classify the group), pausing
-between them.
+dictionaries for text; details at the top of the script). The script makes 5 requests (Dinosauria
+plus the IDs of Theropoda, Aves, Sauropodomorpha and Ornithischia, to classify the group),
+pausing between them.
 
 Then the ancient continents (uses the site list from the previous step):
 
@@ -86,7 +86,7 @@ Fixes applied in `scripts/fetch_data.py`, each with its reason in the code:
   (no. 358782) attached directly to Dinosauria. General rule: a fossil with no group inherits its
   family's group, when the family belongs to a single group.
 - **"Others"** (formerly "Indeterminate"): fossils identified only as dinosaurs, groups outside the
-  three main ones (e.g. herrerasaurids) and eggs/footprints.
+  four main ones (e.g. herrerasaurids) and eggs/footprints.
 - PBDB ocean codes (O1–O7, e.g. O2 = North Atlantic) are shown by name.
 - **Footprints and eggs** (checked on 2026-11-06): taken from the PBDB flags ("I" = ichnofossil,
   "F" = egg). 3 genera with a wrong flag were corrected: *Jialingpus* and *Metatetrapous* are
@@ -99,6 +99,20 @@ Fixes applied in `scripts/fetch_data.py`, each with its reason in the code:
 - **Uncertain identifications** (~11%: "cf.", "?", "aff.") show the original text from the
   publication and an "uncertain identification" tag, instead of the accepted name alone.
 
+- **Records, not bones**: each item is a PBDB *occurrence*, one taxon at one site as reported in
+  a publication (from a single tooth to a whole skeleton). The site says "fossil records" for that
+  reason.
+- **Birds** (checked on 2026-11-07): the PBDB includes Mesozoic birds in Dinosauria (396 records,
+  e.g. *Confuciusornis*, *Asteriornis*, bird footprints). They are theropods, but get their own
+  group from a 4th PBDB query (Aves) so they don't blend in with the other theropods.
+- **Published names**: 2,606 records were published under another name than the accepted one —
+  a synonym or recombination (*Gorgosaurus sternbergi*, now *Gorgosaurus libratus*) or a more
+  specific label (*Theropoda indet. A* and *B* at the same site). The popup shows the accepted
+  name with "published as …", or the specific label, and groups identical lines as "×N".
+- **Time rule**: the PBDB includes a record when more than half of its age range falls within the
+  Mesozoic (its default `timerule=major`); the site's own time filter includes any overlap.
+  Checked on 2026-11-07: using `overlap` would add 1 record.
+
 Known limitations: ~1% of sites have coordinates up to ~120 km on the wrong side of a border
 (precision of the original record); the PBDB uses a newer version of Scotese's model (2021) than
 GPlates (PALEOMAP 2016) — the median difference between the two positions is 0.7°, reaching ~15°
@@ -110,8 +124,9 @@ Follows the system theme; the sun/moon button in the map corner (below the zoom 
 it and the choice is saved (picking the same theme as the system goes back to following the
 system). Switching themes switches the base map (OpenFreeMap `positron` ↔ `dark`, the latter with
 tones adjusted in `src/map.ts`) and carries over the points, search and ancient continents. Group
-colors have a version for each theme, checked with color-blindness simulation and a minimum 3:1
-contrast with the map; text has a contrast of 4.5:1 or more.
+colors have a version for each theme, checked with color-blindness simulation (deuteranopia,
+protanopia and tritanopia) and a minimum 3:1 contrast with the point's outline; text has a
+contrast of 4.5:1 or more.
 
 ## Security and privacy
 
