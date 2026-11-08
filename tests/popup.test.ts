@@ -48,16 +48,16 @@ describe("accuracy: the popup doesn't show more certainty than the source", () =
   });
 
   it("with a group filter, lists only the visible ones and says how many were hidden", () => {
-    const f = { ...defaultFilters(), groups: [false, true, false, false] };
+    const f = { ...defaultFilters(), groups: [false, false, true, false, false] };
     const html = siteHtml(testData(), 1, f);
-    expect(html).toContain("1 fossil");
+    expect(html).toContain("1 fossil record");
     expect(html).toContain("+2 hidden by filters");
   });
 
   it("with a type filter, the list respects it too (only the footprint)", () => {
     const f = { ...defaultFilters(), types: [false, true, false] };
     const html = siteHtml(testData(), 0, f);
-    expect(html).toContain("1 fossil");
+    expect(html).toContain("1 fossil record");
     expect(html).toContain(">footprint<");
     expect(html).not.toContain(">egg<");
   });
@@ -75,6 +75,33 @@ describe("accuracy: the popup doesn't show more certainty than the source", () =
   it('with ancient continents, the place name is marked "Today:" (the present-day place)', () => {
     expect(siteHtml(testData(), 0, { ...defaultFilters(), continents: "ancient" })).toContain("Today: Rio Grande do Sul");
     expect(siteHtml(testData(), 0, defaultFilters())).not.toContain("Today:");
+  });
+});
+
+describe("names published differently from the accepted one", () => {
+  it("a synonym shows the accepted name, with the published one as a note", () => {
+    const html = siteHtml(testData(), 1, defaultFilters());
+    expect(html).toContain("<em>Foo bar</em>");
+    expect(html).toContain("published as <em>Foo antiquus</em>");
+    expect(html).toContain("Fulano, 1900"); // the accepted name's author still fits
+  });
+
+  it('a more specific label ("indet. A") replaces the accepted name and drops its author', () => {
+    const data = testData();
+    data.dict.original_name[2] = "Foo bar indet. A";
+    const html = siteHtml(data, 1, defaultFilters());
+    expect(html).toContain("<em>Foo bar indet. A</em>");
+    expect(html).not.toContain("published as");
+    expect(html).not.toContain("Fulano");
+  });
+
+  it('identical lines at a site are grouped as "×N" (the count above still counts every record)', () => {
+    const data = testData();
+    data.fossils.type[2] = 1; // site 0: the egg becomes a second identical footprint
+    const html = siteHtml(data, 0, defaultFilters());
+    expect(html).toContain("×2");
+    expect(html).toContain("3 fossil records");
+    expect(html.match(/<li>/g)).toHaveLength(2);
   });
 });
 

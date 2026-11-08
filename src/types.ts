@@ -37,7 +37,8 @@ export interface RawData {
     formation: number[];
     n: number[]; // number of fossils at the site
   };
-  /** Sorted by site: the fossils of site i come in sequence (see Data.start). */
+  /** One entry per fossil record (PBDB "occurrence": one taxon at one site, as reported in a
+   *  publication), sorted by site: the records of site i come in sequence (see Data.start). */
   fossils: {
     name: number[];
     family: number[];
@@ -46,8 +47,10 @@ export interface RawData {
     diet: number[];
     author: number[];
   };
-  /** Uncertain identifications: fossil j -> original text in dict.original_name */
+  /** Uncertain identifications: record j -> the publication's original text in dict.original_name */
   uncertain?: { j: number[]; name: number[] };
+  /** Published under another name (synonym, or a label like "indet. A"): record j -> name in dict.original_name */
+  published?: { j: number[]; name: number[] };
 }
 
 export interface Country {
@@ -61,7 +64,8 @@ export interface Data extends RawData {
   start: Uint32Array; // fossils of site i: start[i] to start[i+1]
   period: Uint8Array; // period (index in PERIODS) of the middle of each site's age
   countries: Country[]; // alphabetical, "no country" last
-  uncertainOf: Map<number, number>; // fossil j -> index in dict.original_name
+  uncertainOf: Map<number, number>; // record j -> index in dict.original_name
+  publishedOf: Map<number, number>; // record j -> index in dict.original_name
 }
 
 export type Continents = "present" | "ancient";

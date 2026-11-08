@@ -62,7 +62,7 @@ export function Timeline({ ref, from, to, path, paleoVisible, onChange, onReleas
             {fmtMa(from)} – {fmtMa(to)} million years ago
           </output>
           <span className="text-xs text-muted max-sm:hidden" aria-hidden="true">
-            · height = number of fossils
+            · height = number of fossil records
           </span>
           {!whole && (
             <button

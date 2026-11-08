@@ -85,6 +85,34 @@ class PbdbText(unittest.TestCase):
         self.assertEqual(data.clean_formation(None), "")
 
 
+class PublishedName(unittest.TestCase):
+    """Decides when the popup shows the name a record was published under."""
+
+    def test_synonym_or_recombination_is_kept(self):
+        self.assertEqual(data.published_name("Gorgosaurus sternbergi n. sp.", "Gorgosaurus libratus"), "Gorgosaurus sternbergi")
+
+    def test_specific_label_is_kept(self):
+        # "indet. A" and "indet. B" at the same site are different animals
+        self.assertEqual(data.published_name("Theropoda <indet. A>", "Theropoda"), "Theropoda indet. A")
+        self.assertEqual(data.published_name("Iguanodon mantelli", "Iguanodon"), "Iguanodon mantelli")
+
+    def test_nothing_new_is_dropped(self):
+        self.assertEqual(data.published_name("Theropoda indet.", "Theropoda"), "")
+        self.assertEqual(data.published_name("Tyrannosaurus rex n. sp.", "Tyrannosaurus rex"), "")
+        self.assertEqual(data.published_name("Tyrannosaurus sp.", "Tyrannosaurus"), "")
+        self.assertEqual(data.published_name(None, "Theropoda"), "")
+
+
+class ClassifyGroups(unittest.TestCase):
+    def test_birds_get_their_own_group(self):
+        # A bird is in both the Theropoda and Aves lists: Aves wins
+        ids = {"theropoda": [{"occurrence_no": "1"}, {"occurrence_no": "2"}], "aves": [{"occurrence_no": "2"}]}
+        self.assertEqual(data.classify_groups(ids), {"1": "theropoda", "2": "aves"})
+
+    def test_aves_comes_after_theropoda(self):
+        self.assertLess(list(data.GROUPS).index("theropoda"), list(data.GROUPS).index("aves"))
+
+
 class InheritGroupFromFamily(unittest.TestCase):
     def test_fossil_without_group_inherits_its_family_group(self):
         # Real case: a duplicated "Megalosauridae" in the PBDB left megalosaurids without a group

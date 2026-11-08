@@ -8,8 +8,10 @@ export const fmt = (n: number): string => Number(n).toLocaleString(LOCALE);
 // Millions of years with at most 1 decimal: 201.4 -> "201.4"; 145 -> "145"
 export const fmtMa = (ma: number): string => (Math.round(ma * 10) / 10).toLocaleString(LOCALE);
 
-// "1 fossil" / "2,345 fossils"
-export const nFossils = (n: number): string => (n === 1 ? "1 fossil" : `${fmt(n)} fossils`);
+// "1 fossil record" / "2,345 fossil records". A record (PBDB "occurrence") is one taxon at one
+// site, as reported in a publication: it may be one tooth or a whole skeleton, so the site counts
+// records, not bones or animals.
+export const nRecords = (n: number): string => (n === 1 ? "1 fossil record" : `${fmt(n)} fossil records`);
 
 // Escapes text before putting it inside HTML (names come from outside: never trust them).
 // React already escapes on its own; this is for the map popups, which take ready-made HTML.

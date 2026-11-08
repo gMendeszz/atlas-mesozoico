@@ -3,7 +3,7 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 import { maplibregl, source, type MapLibreMap } from "./map";
 import { siteHtml, tooltipHtml } from "./popup";
-import { fmt } from "./text";
+import { nRecords } from "./text";
 import type { Data, Filters, Point } from "./types";
 
 export interface Popups {
@@ -48,7 +48,7 @@ export function mountPopups(map: MapLibreMap, data: Data, filters: () => Filters
   const onClusterHover = (e: MapLayerMouseEvent) => {
     if (!hasMouse) return;
     const c = first(e);
-    tooltip.setLngLat(coordinates(c)).setHTML(`${fmt(c.properties.n)} fossils · click to zoom in`).addTo(map);
+    tooltip.setLngLat(coordinates(c)).setHTML(`${nRecords(c.properties.n)} · click to zoom in`).addTo(map);
   };
   const onEnter = () => (map.getCanvas().style.cursor = "pointer");
   const onLeave = () => {

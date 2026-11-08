@@ -21,26 +21,26 @@ describe("calculate: time filter", () => {
 
 describe("calculate: counts for each option", () => {
   it("each group's count ignores the group filter itself (shows what you'd get by checking it)", () => {
-    const f = { ...defaultFilters(), groups: [true, false, false, false] };
+    const f = { ...defaultFilters(), groups: [true, false, false, false, false] };
     const r = calculate(testData(), f);
-    expect(r.byGroup).toEqual([2, 1, 1, 3]); // all groups counted...
+    expect(r.byGroup).toEqual([2, 0, 1, 1, 3]); // all groups counted...
     expect(r.totalFossils).toBe(2); // ...but only the theropods on the map
   });
 
   it("each group's count respects country and time", () => {
     const r = calculate(testData(), { ...defaultFilters(), country: "BR" });
-    expect(r.byGroup).toEqual([1, 0, 0, 2]);
+    expect(r.byGroup).toEqual([1, 0, 0, 0, 2]);
   });
 
   it("each country's count ignores the country filter, but respects the group", () => {
     const data = testData();
-    const r = calculate(data, { ...defaultFilters(), country: "BR", groups: [false, true, true, false] });
+    const r = calculate(data, { ...defaultFilters(), country: "BR", groups: [false, false, true, true, false] });
     expect(r.byCountry[data.dict.country.indexOf("US")]).toBe(2);
     expect(r.byCountry[data.dict.country.indexOf("BR")]).toBe(0);
   });
 
   it("each point's size (n) only counts fossils from the checked groups", () => {
-    const r = calculate(testData(), { ...defaultFilters(), groups: [false, false, false, true] });
+    const r = calculate(testData(), { ...defaultFilters(), groups: [false, false, false, false, true] });
     expect(r.features.find((p) => p.id === 0)?.properties.n).toBe(2);
     expect(r.features.find((p) => p.id === 1)).toBeUndefined(); // site 1 has no "others"
   });
@@ -57,20 +57,24 @@ describe("calculate: fossil type and diet", () => {
   it("the diet filter changes the counts of the other filters", () => {
     const r = calculate(testData(), { ...defaultFilters(), diets: [true, false, false, false, false] });
     expect(r.totalFossils).toBe(2); // the 2 carnivores
-    expect(r.byGroup).toEqual([2, 0, 0, 0]);
+    expect(r.byGroup).toEqual([2, 0, 0, 0, 0]);
     expect(r.byType).toEqual([2, 0, 0]);
     expect(r.byDiet).toEqual([2, 2, 0, 0, 3]); // its own count ignores the diet filter
   });
 });
 
 describe("dominantGroup (point color)", () => {
-  it('"Others" only wins when there are none of the three main groups', () => {
-    expect(dominantGroup([1, 0, 0, 9])).toBe(0);
-    expect(dominantGroup([0, 0, 0, 9])).toBe(3);
+  it('"Others" only wins when there are none of the four main groups', () => {
+    expect(dominantGroup([1, 0, 0, 0, 9])).toBe(0);
+    expect(dominantGroup([0, 0, 0, 0, 9])).toBe(4);
+  });
+
+  it("birds count as a main group", () => {
+    expect(dominantGroup([0, 3, 0, 0, 1])).toBe(1);
   });
 
   it("a tie goes to the first group in the list (stable result)", () => {
-    expect(dominantGroup([0, 2, 2, 0])).toBe(1);
+    expect(dominantGroup([0, 0, 2, 2, 0])).toBe(2);
   });
 });
 
@@ -120,7 +124,7 @@ describe("filters in the URL", () => {
       ...defaultFilters(),
       from: 201.4,
       to: 145,
-      groups: [true, false, true, false],
+      groups: [true, false, true, false, true],
       types: [false, true, true],
       diets: [true, true, false, false, false],
       country: "BR",

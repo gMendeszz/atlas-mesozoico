@@ -45,8 +45,18 @@ export function About({ data }: { data: Data | null }) {
       <ul className="list-disc pl-4 [&>li]:my-[3px]">
         <li>
           <strong>Source:</strong> the <External href="https://paleobiodb.org">Paleobiology Database</External>, a scientific
-          database maintained by researchers since 1998. Every record comes from a publication: these {v.fossils} fossils
-          come from {v.references} papers and books. Data from {v.date}.
+          database maintained by researchers since 1998. Every record comes from a publication: these {v.fossils} fossil
+          records come from {v.references} papers and books. Data from {v.date}.
+        </li>
+        <li>
+          <strong>The numbers count fossil records, not bones or animals.</strong> Each record is one taxon at one
+          site, as reported in a publication: it may be a single tooth or a whole skeleton. When the same name shows up
+          several times at a site (e.g. “Theropoda ×13”), the publication described that many different animals or
+          forms; the name it was published under is shown when it says more than the accepted name.
+        </li>
+        <li>
+          <strong>Birds are dinosaurs:</strong> Mesozoic birds (such as <em>Confuciusornis</em>) are theropods. Here
+          they get their own group so they don’t blend in with the other theropods.
         </li>
         <li>
           <strong>The map shows where fossils were collected and recorded</strong>, not where dinosaurs lived. Some places

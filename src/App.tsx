@@ -201,11 +201,14 @@ export function App() {
           counts={result?.byGroup ?? null}
           onChange={changeList("groups")}
         >
-          <p className={NOTE}>Each dot is colored by the group with the most fossils at that site.</p>
+          <p className={NOTE}>
+            Each dot is colored by the group with the most records at that site. Birds are theropods too; here they
+            have their own group.
+          </p>
           <details className="mt-1 text-xs text-muted">
             <summary className="w-fit cursor-pointer text-accent">What’s in “Others”?</summary>
             <p className="mt-1 leading-[1.4]">
-              Fossils identified only as dinosaurs, groups outside these three (such as herrerasaurids), and
+              Fossils identified only as dinosaurs, groups outside these four (such as herrerasaurids), and
               eggs and footprints with no assigned group.
             </p>
           </details>
@@ -266,14 +269,14 @@ export function App() {
 
 function countText(r: Result | null): string {
   if (!r) return "Loading data…";
-  if (!r.totalFossils) return "No fossils match these filters";
-  return `${fmt(r.totalFossils)} fossils at ${fmt(r.features.length)} sites`;
+  if (!r.totalFossils) return "No fossil records match these filters";
+  return `${fmt(r.totalFossils)} fossil records at ${fmt(r.features.length)} sites`;
 }
 
 function paleoText(paleo: PaleoState, r: Result | null): string {
   if (paleo.error) return "Couldn’t load the ancient continents. Please try again.";
   if (paleo.loading) return `Loading Earth at ${paleo.t} million years ago…`;
   let text = `Earth ${paleo.t} million years ago (middle of the selected range). Present-day coastlines, shown where they were at that time.`;
-  if (r?.noPosition) text += ` ${fmt(r.noPosition)} fossils are hidden: the model can’t reconstruct their location.`;
+  if (r?.noPosition) text += ` ${fmt(r.noPosition)} fossil records are hidden: the model can’t reconstruct their location.`;
   return text;
 }

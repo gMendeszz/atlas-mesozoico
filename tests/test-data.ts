@@ -1,6 +1,7 @@
 // Small data in the same format as public/data/dinos.json, built to cover the hard cases: an
 // age range crossing the end of the Mesozoic, a site on the date line, an uncertain
-// identification, a malicious name, a tie between groups, a footprint, an egg and an uncertain formation.
+// identification, a malicious name, a tie between groups, a footprint, an egg, an uncertain
+// formation and a record published under a synonym.
 import { prepareData } from "../src/data";
 
 export const NAMES = ["", "Tyrannosaurus rex", "Tyrannosauridae", "Dinosauria", "Foo bar", '<img src=x onerror="alert(1)">'];
@@ -10,13 +11,13 @@ export function testData() {
     meta: {
       generated_at: "2026-11-04",
       sites_signature: "test",
-      groups: ["theropoda", "sauropodomorpha", "ornithischia", "others"],
+      groups: ["theropoda", "aves", "sauropodomorpha", "ornithischia", "others"],
       types: ["body", "footprint", "egg"],
       diets: ["carnivore", "herbivore", "omnivore", "piscivore", "unknown"],
     },
     dict: {
       name: NAMES,
-      original_name: ["", "cf. Tyrannosaurus rex"],
+      original_name: ["", "cf. Tyrannosaurus rex", "Foo antiquus"],
       family: ["", "Tyrannosauridae"],
       interval: ["", "Carnian – Norian", "Maastrichtian – Danian", "Kimmeridgian"],
       country: ["", "BR", "US", "NZ"],
@@ -39,16 +40,18 @@ export function testData() {
     // site 0 (Brazil, Triassic, Santa Maria Fm.): 1 carnivorous theropod (uncertain, with an
     //   author that must not show) + 1 footprint and 1 egg from "others", no diet
     // site 1 (USA, 72–61.7 Ma, uncertain Hell Creek Fm.): 1 herbivorous sauropodomorph (with
-    //   author) + 1 herbivorous ornithischian + 1 carnivorous theropod with a malicious name
+    //   author, published as the synonym "Foo antiquus") + 1 herbivorous ornithischian + 1
+    //   carnivorous theropod with a malicious name
     // site 2 (New Zealand, Jurassic, no formation): 1 "others" with no diet
     fossils: {
       name: [1, 3, 3, 4, 4, 5, 3],
       family: [1, 0, 0, 0, 0, 0, 0],
-      group: [0, 3, 3, 1, 2, 0, 3],
+      group: [0, 4, 4, 2, 3, 0, 4],
       type: [0, 1, 2, 0, 0, 0, 0],
       diet: [0, 4, 4, 1, 1, 0, 4],
       author: [2, 0, 0, 1, 0, 0, 0],
     },
     uncertain: { j: [0], name: [1] },
+    published: { j: [3], name: [2] },
   });
 }
