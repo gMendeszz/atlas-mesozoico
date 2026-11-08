@@ -40,7 +40,7 @@ jobs:
       - run: npm run build
 
       - name: Keep the built site for the deploy job
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.repository.private
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist
@@ -48,7 +48,9 @@ jobs:
   deploy:
     name: Publish to GitHub Pages
     needs: check
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # GitHub Pages on the Free plan only publishes public repositories: while the repository is
+    # private, the checks still run but nothing is published (instead of a failing deploy)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.repository.private
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Only this job can publish, and only to Pages

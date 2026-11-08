@@ -213,6 +213,15 @@ it fails.
 - `docs/` — README screenshots (not part of the site)
 - `data/raw/` — API response cache (not in git)
 
+## License
+
+The code (site, data scripts and tests) and the original artwork (favicon, footprint drawings,
+icons and screenshots) are released under the [MIT License](LICENSE).
+
+The data files in `public/data` are derived from the Paleobiology Database and from PALEOMAP via
+the GPlates Web Service, and follow their terms; the base map comes from OpenFreeMap and
+OpenStreetMap, and the libraries keep their own licenses. Details in the next section.
+
 ## Credits and licenses
 
 **Fossil data:** [Paleobiology Database](https://paleobiodb.org) (PBDB). The PBDB releases its data
