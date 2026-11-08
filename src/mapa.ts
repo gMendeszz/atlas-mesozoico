@@ -40,7 +40,8 @@ export function criarMapa(container: HTMLElement, tema: Tema, margemInferior: nu
       "Popup.Close": "Fechar",
     },
   });
-  map.addControl(new maplibregl.NavigationControl(), "top-right");
+  // Só zoom: a bússola (norte pra cima) não faz falta, o atlas não gira o mapa de lado
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   carregarEstilo(map, tema);
   return map;
 }

@@ -17,7 +17,7 @@ export function SeletorPais({ paises, porPais, valor, aoEscolher }: Props) {
   const total = porPais ? porPais.reduce((a, b) => a + b, 0) : 0;
 
   return (
-    <div className="mt-3.5">
+    <div className="border-t border-borda pt-2.5 pb-3">
       <label className={`${ROTULO} mb-1.5`} htmlFor={id}>
         País
       </label>
