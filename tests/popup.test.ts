@@ -39,27 +39,27 @@ describe("veracidade: o popup não mostra mais certeza do que a fonte", () => {
   it("identificação incerta mostra o texto original e a marca", () => {
     const html = htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao());
     expect(html).toContain("cf. Tyrannosaurus rex");
-    expect(html).toContain("identificação incerta");
+    expect(html).toContain("uncertain identification");
   });
 
   it("identificação certa não leva a marca", () => {
     const html = htmlDoLocal(dadosDeTeste(), 2, filtrosPadrao());
-    expect(html).not.toContain("identificação incerta");
+    expect(html).not.toContain("uncertain identification");
   });
 
   it("com filtro de grupo, lista só os visíveis e avisa quantos foram escondidos", () => {
     const f = { ...filtrosPadrao(), grupos: [false, true, false, false] };
     const html = htmlDoLocal(dadosDeTeste(), 1, f);
-    expect(html).toContain("1 fóssil");
-    expect(html).toContain("+2 escondidos pelos filtros");
+    expect(html).toContain("1 fossil");
+    expect(html).toContain("+2 hidden by filters");
   });
 
   it("com filtro de tipo, a lista também respeita (só a pegada)", () => {
     const f = { ...filtrosPadrao(), tipos: [false, true, false] };
     const html = htmlDoLocal(dadosDeTeste(), 0, f);
-    expect(html).toContain("1 fóssil");
-    expect(html).toContain(">pegada<");
-    expect(html).not.toContain(">ovo<");
+    expect(html).toContain("1 fossil");
+    expect(html).toContain(">footprint<");
+    expect(html).not.toContain(">egg<");
   });
 
   it("autor e ano aparecem, exceto em identificação incerta (seria certeza demais)", () => {
@@ -68,23 +68,23 @@ describe("veracidade: o popup não mostra mais certeza do que a fonte", () => {
   });
 
   it("mostra a formação geológica, quando há", () => {
-    expect(htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao())).toContain("Formação Santa Maria");
-    expect(htmlDoLocal(dadosDeTeste(), 2, filtrosPadrao())).not.toContain("Formação");
+    expect(htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao())).toContain("Santa Maria Formation");
+    expect(htmlDoLocal(dadosDeTeste(), 2, filtrosPadrao())).not.toContain("Formation");
   });
 
-  it('em continentes antigos, o nome do lugar é marcado como "Hoje:" (o lugar atual)', () => {
-    expect(htmlDoLocal(dadosDeTeste(), 0, { ...filtrosPadrao(), continentes: "antigos" })).toContain("Hoje: Rio Grande do Sul");
-    expect(htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao())).not.toContain("Hoje:");
+  it('em continentes antigos, o nome do lugar é marcado como "Today:" (o lugar atual)', () => {
+    expect(htmlDoLocal(dadosDeTeste(), 0, { ...filtrosPadrao(), continentes: "antigos" })).toContain("Today: Rio Grande do Sul");
+    expect(htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao())).not.toContain("Today:");
   });
 });
 
 describe("nomePais", () => {
   it("traduz os códigos de oceano próprios do PBDB (não são ISO)", () => {
-    expect(nomePais("O2")).toBe("Atlântico Norte");
+    expect(nomePais("O2")).toBe("North Atlantic");
   });
 
   it('aceita o "UK" que o PBDB usa no lugar do ISO "GB"', () => {
-    expect(nomePais("UK")).toBe("Reino Unido");
+    expect(nomePais("UK")).toBe("United Kingdom");
   });
 
   it("código desconhecido não derruba a página", () => {

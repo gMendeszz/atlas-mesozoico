@@ -48,7 +48,7 @@ export function montarPopups(map: MapaLibre, dados: Dados, filtros: () => Filtro
   const aoPassarCluster = (e: MapLayerMouseEvent) => {
     if (!temMouse) return;
     const c = primeiro(e);
-    dica.setLngLat(coordenadas(c)).setHTML(`${fmt(c.properties.n)} fósseis · clique para aproximar`).addTo(map);
+    dica.setLngLat(coordenadas(c)).setHTML(`${fmt(c.properties.n)} fossils · click to zoom in`).addTo(map);
   };
   const aoEntrar = () => (map.getCanvas().style.cursor = "pointer");
   const aoSair = () => {

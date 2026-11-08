@@ -1,7 +1,7 @@
 // Busca por nome de dinossauro ou por formação geológica (lógica pura; a interface fica em
 // componentes/Busca.tsx).
 import { lugarDoLocal } from "./dados";
-import { fmt, nFosseis } from "./texto";
+import { IDIOMA, fmt, nFosseis } from "./texto";
 import type { Dados, Ponto } from "./tipos";
 
 export interface Achado {
@@ -10,25 +10,25 @@ export interface Achado {
   incertos: number;
 }
 
-const PREFIXO_FORMACAO = "formação ";
+const SUFIXO_FORMACAO = " formation";
 // "Kirtland (?)" (formação incerta no PBDB) é achada buscando "Kirtland"
 const nomeBaseDaFormacao = (texto: string): string => texto.replace(/ \(\?\)$/, "");
 
-// Sugestões: nomes usados por algum fóssil e formações com algum local ("Formação Morrison"),
+// Sugestões: nomes usados por algum fóssil e formações com algum local ("Morrison Formation"),
 // em ordem alfabética
 export function nomesBuscaveis(dados: Dados): string[] {
   const nomes = [...new Set(dados.fosseis.nome)].map((idx) => dados.dic.nome[idx]);
   const formacoes = [...new Set(dados.locais.formacao)]
     .map((idx) => dados.dic.formacao[idx])
     .filter(Boolean)
-    .map((t) => `Formação ${nomeBaseDaFormacao(t)}`);
-  return [...new Set([...nomes, ...formacoes])].filter(Boolean).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    .map((t) => `${nomeBaseDaFormacao(t)} Formation`);
+  return [...new Set([...nomes, ...formacoes])].filter(Boolean).sort((a, b) => a.localeCompare(b, IDIOMA));
 }
 
 // Locais com fósseis desse nome. Sem diferenciar maiúsculas; o gênero acha as espécies
 // ("Tyrannosaurus" acha "Tyrannosaurus rex"), mas não nomes que só começam igual
 // ("Tyrannosaurus" não acha "Tyrannosauridae"). Se nenhum nome bate, tenta como formação,
-// com ou sem a palavra "Formação" ("Morrison" e "Formação Morrison" acham o mesmo).
+// com ou sem a palavra "Formation" ("Morrison" e "Morrison Formation" acham o mesmo).
 export function locaisDoNome(dados: Dados, texto: string): Achado {
   const alvo = texto.trim().toLowerCase();
   const vazio: Achado = { locais: new Set(), fosseis: 0, incertos: 0 };
@@ -58,7 +58,7 @@ export function locaisDoNome(dados: Dados, texto: string): Achado {
 }
 
 function locaisDaFormacao(dados: Dados, alvo: string): Achado | null {
-  const nome = alvo.startsWith(PREFIXO_FORMACAO) ? alvo.slice(PREFIXO_FORMACAO.length).trim() : alvo;
+  const nome = alvo.endsWith(SUFIXO_FORMACAO) ? alvo.slice(0, -SUFIXO_FORMACAO.length).trim() : alvo;
   const idsFormacao = new Set<number>();
   dados.dic.formacao.forEach((t, idx) => {
     if (t && nomeBaseDaFormacao(t).toLowerCase() === nome) idsFormacao.add(idx);
@@ -80,15 +80,15 @@ function locaisDaFormacao(dados: Dados, alvo: string): Achado | null {
 // `visiveis`: os locais achados que aparecem no mapa agora (respeitando os filtros).
 export function resumoDaBusca(dados: Dados, texto: string, achado: Achado | null, visiveis: Ponto[]): string {
   if (!texto) return "";
-  if (!achado?.locais.size) return `Nenhum fóssil encontrado para “${texto}”.`;
+  if (!achado?.locais.size) return `No fossils found for “${texto}”.`;
   const n = achado.locais.size;
-  let info = `${texto}: ${nFosseis(achado.fosseis)} em ${n === 1 ? "1 local" : `${fmt(n)} locais`}`;
-  if (achado.incertos) info += ` (${fmt(achado.incertos)} com identificação incerta)`;
+  let info = `${texto}: ${nFosseis(achado.fosseis)} at ${n === 1 ? "1 site" : `${fmt(n)} sites`}`;
+  if (achado.incertos) info += ` (${fmt(achado.incertos)} with uncertain identification)`;
   if (visiveis.length) {
     const lugares = [...new Set(visiveis.map((p) => lugarDoLocal(dados, p.id)).filter(Boolean))];
-    info += `. Locais: ${lugares.slice(0, 3).join("; ")}${lugares.length > 3 ? "…" : ""}`;
+    info += `. Sites: ${lugares.slice(0, 3).join("; ")}${lugares.length > 3 ? "…" : ""}`;
   }
   const ocultos = n - visiveis.length;
-  if (ocultos) info += `. ${ocultos === 1 ? "1 local está oculto" : `${fmt(ocultos)} locais estão ocultos`} pelos filtros atuais.`;
+  if (ocultos) info += `. ${ocultos === 1 ? "1 site is" : `${fmt(ocultos)} sites are`} hidden by the current filters.`;
   return info;
 }

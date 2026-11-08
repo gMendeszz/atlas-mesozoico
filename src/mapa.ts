@@ -29,15 +29,14 @@ export function criarMapa(container: HTMLElement, tema: Tema, margemInferior: nu
     // Inércia mais contida que o padrão (maxSpeed 1400, deceleration 2500): no globo, a
     // inércia padrão fazia um arrasto curto girar 150°+ depois de soltar o mouse.
     dragPan: { linearity: 0.25, maxSpeed: 600, deceleration: 3500 },
-    // Textos dos controles (lidos por leitores de tela) em português
+    // Textos dos controles (lidos por leitores de tela)
     locale: {
-      "Map.Title": "Mapa de fósseis",
-      "NavigationControl.ZoomIn": "Aproximar",
-      "NavigationControl.ZoomOut": "Afastar",
-      "NavigationControl.ResetBearing": "Arraste para girar; clique para pôr o norte para cima",
-      "AttributionControl.ToggleAttribution": "Mostrar ou esconder créditos do mapa",
-      "AttributionControl.MapFeedback": "Enviar correção do mapa",
-      "Popup.Close": "Fechar",
+      "Map.Title": "Fossil map",
+      "NavigationControl.ZoomIn": "Zoom in",
+      "NavigationControl.ZoomOut": "Zoom out",
+      "AttributionControl.ToggleAttribution": "Show or hide map credits",
+      "AttributionControl.MapFeedback": "Suggest a map correction",
+      "Popup.Close": "Close",
     },
   });
   // Só zoom: a bússola (norte pra cima) não faz falta, o atlas não gira o mapa de lado
@@ -106,13 +105,13 @@ export function carregarEstilo(map: MapaLibre, tema: Tema): void {
   });
 }
 
-// Nomes do mapa base em português quando o mapa tiver a tradução (senão, o nome local)
-export function nomesEmPortugues(map: MapaLibre): void {
+// Nomes do mapa base em inglês quando o mapa tiver a tradução (senão, o nome local)
+export function nomesEmIngles(map: MapaLibre): void {
   for (const camada of map.getStyle().layers) {
     if (camada.type !== "symbol") continue;
     const campo = map.getLayoutProperty(camada.id, "text-field");
     if (campo && JSON.stringify(campo).includes("name")) {
-      map.setLayoutProperty(camada.id, "text-field", ["coalesce", ["get", "name:pt"], ["get", "name"]]);
+      map.setLayoutProperty(camada.id, "text-field", ["coalesce", ["get", "name:en"], ["get", "name"]]);
     }
   }
 }
@@ -183,11 +182,11 @@ export function adicionarCamadas(map: MapaLibre, tema: Tema, featuresIniciais: P
     source: "dinos",
     filter: ["has", "point_count"],
     layout: {
-      // Número de fósseis (não de locais); 1000+ vira "1,2 mil"
+      // Número de fósseis (não de locais); 1000+ vira "1.2k"
       "text-field": [
         "case",
         [">=", ["get", "n"], 1000],
-        ["concat", ["number-format", ["/", ["get", "n"], 1000], { locale: "pt-BR", "max-fraction-digits": 1 }], " mil"],
+        ["concat", ["number-format", ["/", ["get", "n"], 1000], { locale: "en-US", "max-fraction-digits": 1 }], "k"],
         ["to-string", ["get", "n"]],
       ],
       "text-font": ["Noto Sans Bold"],

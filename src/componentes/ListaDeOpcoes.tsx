@@ -1,13 +1,11 @@
 // Lista de caixas de marcar com a contagem de cada opção (grupo, tipo de fóssil, dieta).
 // Nos grupos, a bolinha de cor faz da lista também a legenda do mapa (fica sempre aberta).
-// As outras podem ser recolhíveis, mostrando um resumo ao lado do título ("Todos", "2 de 5").
+// As outras podem ser recolhíveis, mostrando um resumo ao lado do título ("All", "2 of 5").
 import { useState, type CSSProperties, type ReactNode } from "react";
 import type { Grupo, Opcao } from "../constantes";
 import { fmt } from "../texto";
 import { ROTULO } from "./classes";
 import { IconeChevron } from "./Icones";
-
-type Genero = "masculino" | "feminino";
 
 interface Props {
   id: string; // prefixo dos ids das caixas (`${id}-0`, `${id}-1`...)
@@ -16,17 +14,17 @@ interface Props {
   marcados: boolean[];
   contagens: number[] | null; // null enquanto os dados carregam
   aoMudar: (i: number, marcado: boolean) => void;
-  recolhivel?: Genero; // recolhível; o gênero é o do resumo ("Todos"/"Todas")
+  recolhivel?: boolean;
   children?: ReactNode; // notas abaixo da lista
 }
 
 const temCor = (o: Opcao | Grupo): o is Grupo => "cor" in o;
 
-function resumo(marcados: boolean[], genero: Genero): string {
+function resumo(marcados: boolean[]): string {
   const n = marcados.filter(Boolean).length;
-  if (n === marcados.length) return genero === "masculino" ? "Todos" : "Todas";
-  if (n === 0) return genero === "masculino" ? "Nenhum" : "Nenhuma";
-  return `${n} de ${marcados.length}`;
+  if (n === marcados.length) return "All";
+  if (n === 0) return "None";
+  return `${n} of ${marcados.length}`;
 }
 
 export function ListaDeOpcoes({ id, legenda, opcoes, marcados, contagens, aoMudar, recolhivel, children }: Props) {
@@ -70,7 +68,7 @@ export function ListaDeOpcoes({ id, legenda, opcoes, marcados, contagens, aoMuda
         <IconeChevron className="flex-none text-suave transition-transform duration-150 group-open:rotate-90 motion-reduce:transition-none" />
         <span className={ROTULO}>{legenda}</span>
         {/* Com filtro ativo, o resumo fica em destaque: dá pra ver o filtro mesmo com a seção fechada */}
-        <span className={`ml-auto text-sm ${tudo ? "text-suave" : "font-semibold text-destaque"}`}>{resumo(marcados, recolhivel)}</span>
+        <span className={`ml-auto text-sm ${tudo ? "text-suave" : "font-semibold text-destaque"}`}>{resumo(marcados)}</span>
       </summary>
       <div className="pb-2.5">{lista}</div>
     </details>

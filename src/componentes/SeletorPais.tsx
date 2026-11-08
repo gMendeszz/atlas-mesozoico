@@ -19,10 +19,10 @@ export function SeletorPais({ paises, porPais, valor, aoEscolher }: Props) {
   return (
     <div className="border-t border-borda pt-2.5 pb-3">
       <label className={`${ROTULO} mb-1.5`} htmlFor={id}>
-        País
+        Country
       </label>
       <select id={id} value={valor} onChange={(e) => aoEscolher(e.target.value)} className={`${CAMPO} min-h-[34px] px-2 py-1`}>
-        <option value="">{`Todos os países${n(total)}`}</option>
+        <option value="">{`All countries${n(total)}`}</option>
         {/* "Sem país" não tem código pra filtrar; fica de fora */}
         {paises
           .filter((p) => p.cc)

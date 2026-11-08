@@ -22,15 +22,15 @@ export function Painel({ ref, contagem, anuncio, erro, children }: Props) {
   return (
     <aside
       ref={ref}
-      aria-label="Controles do mapa"
+      aria-label="Filters"
       className={`${CARTAO} absolute top-4 left-4 w-[280px] max-w-[calc(100%-32px)] max-h-[calc(100dvh-226px)] overflow-y-auto overscroll-contain px-4 pt-3.5 pb-4
         max-sm:top-2.5 max-sm:left-2.5 max-sm:right-14 max-sm:w-auto max-sm:max-w-none max-sm:max-h-[calc(100dvh-220px)]`}
     >
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-bold tracking-[-0.01em]">Atlas Mesozoico</h1>
+        <h1 className="text-xl font-bold tracking-[-0.01em]">Mesozoic Atlas</h1>
         <button type="button" className={BOTAO_ICONE} aria-expanded={aberto} aria-controls={idCorpo} onClick={() => setAberto(!aberto)}>
             {/* Nome fixo: o estado (aberto/fechado) quem diz é o aria-expanded */}
-            <span className="sr-only">Painel de controles</span>
+            <span className="sr-only">Filter panel</span>
             <IconeSeta className={`transition-transform duration-200 motion-reduce:transition-none ${aberto ? "" : "rotate-180"}`} />
           </button>
       </div>
@@ -42,7 +42,7 @@ export function Painel({ ref, contagem, anuncio, erro, children }: Props) {
       </p>
 
       <div id={idCorpo} hidden={!aberto}>
-        <p className="mt-1 mb-3 text-[0.8rem] text-suave">Fósseis de dinossauros · 252–66 milhões de anos</p>
+        <p className="mt-1 mb-3 text-[0.8rem] text-suave">Dinosaur fossils · 252–66 million years ago</p>
         {children}
       </div>
     </aside>
