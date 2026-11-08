@@ -1,34 +1,34 @@
-// Cálculos geográficos usados pelo mapa.
+// Geographic calculations used by the map.
 
-export type Coordenada = [number, number]; // [lng, lat]
-export type Limites = [Coordenada, Coordenada]; // [[oeste, sul], [leste, norte]]
+export type Coordinate = [number, number]; // [lng, lat]
+export type Bounds = [Coordinate, Coordinate]; // [[west, south], [east, north]]
 
-// Limites de uma lista de coordenadas.
-// Se os pontos atravessam a linha de data (ex.: Nova Zelândia com as Ilhas Chatham a -176°),
-// a caixa "direta" iria de -176° a +178° e cobriria o mundo inteiro; nesse caso as longitudes
-// negativas viram >180° (o mesmo lugar, do lado contínuo), e a caixa fica do tamanho certo.
-export function limitesDosPontos(coordenadas: Coordenada[]): Limites | null {
-  if (!coordenadas.length) return null;
-  const lngs = coordenadas.map(([lng]) => lng);
-  const cruza = Math.max(...lngs) - Math.min(...lngs) > 180;
-  let [oeste, sul, leste, norte] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const [lng0, lat] of coordenadas) {
-    const lng = cruza && lng0 < 0 ? lng0 + 360 : lng0;
-    oeste = Math.min(oeste, lng);
-    leste = Math.max(leste, lng);
-    sul = Math.min(sul, lat);
-    norte = Math.max(norte, lat);
+// Bounds of a list of coordinates.
+// If the points cross the date line (e.g. New Zealand with the Chatham Islands at -176°),
+// the "direct" box would go from -176° to +178° and cover the whole world; in that case the
+// negative longitudes become >180° (the same place, on the continuous side), and the box is the right size.
+export function boundsOfPoints(coordinates: Coordinate[]): Bounds | null {
+  if (!coordinates.length) return null;
+  const lngs = coordinates.map(([lng]) => lng);
+  const crosses = Math.max(...lngs) - Math.min(...lngs) > 180;
+  let [west, south, east, north] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const [lng0, lat] of coordinates) {
+    const lng = crosses && lng0 < 0 ? lng0 + 360 : lng0;
+    west = Math.min(west, lng);
+    east = Math.max(east, lng);
+    south = Math.min(south, lat);
+    north = Math.max(north, lat);
   }
   return [
-    [oeste, sul],
-    [leste, norte],
+    [west, south],
+    [east, north],
   ];
 }
 
-// Zoom em que o globo ocupa quase toda a área livre (largura × altura em px).
-// Globo pequeno = cada pixel arrastado gira muitos graus e é fácil errar o alvo.
-// Diâmetro do globo em px ≈ 512 · 2^zoom / π.
-export function zoomDoGloboInteiro(largura: number, altura: number): number {
-  const diametro = Math.max(220, Math.min(largura * 0.92, altura * 0.94));
-  return Math.log2((diametro * Math.PI) / 512);
+// Zoom at which the globe fills almost all of the free area (width × height in px).
+// A small globe = each dragged pixel rotates many degrees and it's easy to miss the target.
+// Globe diameter in px ≈ 512 · 2^zoom / π.
+export function wholeGlobeZoom(width: number, height: number): number {
+  const diameter = Math.max(220, Math.min(width * 0.92, height * 0.94));
+  return Math.log2((diameter * Math.PI) / 512);
 }

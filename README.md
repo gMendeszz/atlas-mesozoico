@@ -20,8 +20,6 @@ server: everything runs in the browser.
 - Shareable links (filters live in the URL), light and dark themes, keyboard and screen-reader
   support
 
-Code comments and identifiers are in Portuguese.
-
 ## Run locally
 
 ```bash
@@ -43,8 +41,8 @@ required: the link preview (Open Graph), `canonical`, `sitemap.xml`, `robots.txt
 of the 404 page, which can show up at any nonexistent address.
 
 Web files in `public/`: `favicon.svg` (a T. rex footprint) and `favicon-32.png`, home-screen icons
-in `icones/` (including a "maskable" version that Android can crop to a circle),
-`manifest.webmanifest` and `previa-social.png` (1200×630, a real screenshot of the globe).
+in `icons/` (including a "maskable" version that Android can crop to a circle),
+`manifest.webmanifest` and `social-preview.png` (1200×630, a real screenshot of the globe).
 `robots.txt` and `sitemap.xml` are generated at build time. On an address with a subfolder
 (`user.github.io/repository/`), search engines only read the `robots.txt` at the domain root; the
 `sitemap.xml` can be submitted directly in Google Search Console.
@@ -54,8 +52,8 @@ in `icones/` (including a "maskable" version that Android can crop to a circle),
 Requires Python 3 (standard library only, no pip):
 
 ```bash
-python scripts/baixar_dados.py            # uses the cache in data/raw/ if present
-python scripts/baixar_dados.py --refresh  # downloads everything again from the PBDB
+python scripts/fetch_data.py            # uses the cache in data/raw/ if present
+python scripts/fetch_data.py --refresh  # downloads everything again from the PBDB
 ```
 
 Generates `public/data/dinos.json` (compact format: one table of sites and one of fossils, with
@@ -66,8 +64,8 @@ between them.
 Then the ancient continents (uses the site list from the previous step):
 
 ```bash
-python scripts/baixar_paleo.py            # uses the cache in data/raw/paleo/ if present
-python scripts/baixar_paleo.py --refresh  # downloads everything again from GPlates
+python scripts/fetch_paleo.py            # uses the cache in data/raw/paleo/ if present
+python scripts/fetch_paleo.py --refresh  # downloads everything again from GPlates
 ```
 
 For each time slice from 70 to 250 million years ago (every 10), it asks the GPlates Web Service
@@ -78,7 +76,7 @@ is 38 requests, pausing between them.
 
 Checked on 2026-11-04 (raw data vs. JSON, coordinates vs. Natural Earth country outlines, ancient
 positions vs. the PBDB's own paleocoordinates, app counts vs. an independent calculation).
-Fixes applied in `scripts/baixar_dados.py`, each with its reason in the code:
+Fixes applied in `scripts/fetch_data.py`, each with its reason in the code:
 
 - **1 coordinate corrected** (Titem Suwraga, Mongolia): longitude entered as west; the PBDB's own
   text gives the right coordinate (102° E).
@@ -111,7 +109,7 @@ in rare cases (e.g. Great Britain in the Triassic).
 Follows the system theme; the sun/moon button in the map corner (below the zoom buttons) switches
 it and the choice is saved (picking the same theme as the system goes back to following the
 system). Switching themes switches the base map (OpenFreeMap `positron` ↔ `dark`, the latter with
-tones adjusted in `src/mapa.ts`) and carries over the points, search and ancient continents. Group
+tones adjusted in `src/map.ts`) and carries over the points, search and ancient continents. Group
 colors have a version for each theme, checked with color-blindness simulation and a minimum 3:1
 contrast with the map; text has a contrast of 4.5:1 or more.
 
@@ -121,7 +119,7 @@ contrast with the map; text has a contrast of 4.5:1 or more.
   scripts; connections only to the site and to `tiles.openfreemap.org`. Tested: it blocks external
   scripts and sending data to another server.
 - Text from the data: React escapes it automatically; the map popups (HTML built outside React)
-  go through `esc()` in `src/texto.ts`. No `dangerouslySetInnerHTML`.
+  go through `esc()` in `src/text.ts`. No `dangerouslySetInnerHTML`.
 - 3 runtime dependencies (`maplibre-gl`, `react`, `react-dom`); development dependencies are
   Vite, Vitest, TypeScript, Tailwind and the official plugins. Exact versions in `package.json`,
   locked in `package-lock.json`; only versions published at least 2 weeks earlier were installed.
@@ -143,8 +141,8 @@ python -m unittest discover -s tests -p "test_*.py"   # Python scripts
 The tests cover rules that, if broken, would show wrong data or open a security hole: time
 filtering by range overlap, counts for each option, the histogram (including ranges that extend
 past the Mesozoic), fitting bounds across the date line, HTML escaping, uncertain
-identifications, filters from the URL and search. `tests/dados-publicados.test.ts` checks the
-**real** files in `public/data` (run `npm run test:dados` after updating the data): `dinos.json`
+identifications, filters from the URL and search. `tests/published-data.test.ts` checks the
+**real** files in `public/data` (run `npm run test:data` after updating the data): `dinos.json`
 in sync with the time slices, country codes without a name, removed sites that came back, etc.
 
 Each test was validated by deliberately reintroducing the bug it guards against and checking that
@@ -152,28 +150,28 @@ it fails.
 
 ## Structure
 
-- `scripts/baixar_dados.py` — downloads from the PBDB and generates the compact JSON
-- `scripts/baixar_paleo.py` — downloads the per-time-slice reconstructions from GPlates
+- `scripts/fetch_data.py` — downloads from the PBDB and generates the compact JSON
+- `scripts/fetch_paleo.py` — downloads the per-time-slice reconstructions from GPlates
 - `public/data/dinos.json` — compact data ready for the map (~1 MB, ~280 KB compressed)
 - `public/data/paleo/<time>.json` — ancient continents and positions (~150 KB, ~43 KB compressed;
   the site only downloads the slice in use)
 - `public/404.html` — "not found" page (static, no JavaScript; dark theme follows the system)
-- `public/tema-inicial.js` — sets the light/dark theme before the page appears (no flash)
+- `public/initial-theme.js` — sets the light/dark theme before the page appears (no flash)
 - `src/` — the site (React + TypeScript):
-  - pure logic, no React, with tests: `filtros.ts` (points, counts and histogram), `busca.ts`,
-    `paleo.ts`, `geo.ts`, `popup.ts`, `dados.ts`, `texto.ts`, `histograma.ts`, `constantes.ts`;
-    data types in `tipos.ts`
-  - map (MapLibre, imperative): `mapa.ts` (layers, base-map theme, fitting bounds) and
-    `popups-mapa.ts`
-  - hooks connecting the map to React: `hooks/useMapa.ts` (creates the map and tracks the base
-    map), `useCamadas.ts` (keeps points, ancient continents, search highlight and popups in sync
-    with state), `useVista.ts` (globe/flat map and rotation), `useEpocaPaleo.ts`, `useTema.ts`
-  - components: `componentes/Painel.tsx`, `Busca.tsx`, `ListaDeOpcoes.tsx`, `SeletorPais.tsx`,
-    `LinhaDoTempo.tsx`, `Sobre.tsx`, `Alternador.tsx`, `ControlesDoMapa.tsx` (globe/flat map,
-    rotation and theme)
+  - pure logic, no React, with tests: `filters.ts` (points, counts and histogram), `search.ts`,
+    `paleo.ts`, `geo.ts`, `popup.ts`, `data.ts`, `text.ts`, `histogram.ts`, `constants.ts`;
+    data types in `types.ts`
+  - map (MapLibre, imperative): `map.ts` (layers, base-map theme, fitting bounds) and
+    `map-popups.ts`
+  - hooks connecting the map to React: `hooks/useMap.ts` (creates the map and tracks the base
+    map), `useLayers.ts` (keeps points, ancient continents, search highlight and popups in sync
+    with state), `useView.ts` (globe/flat map and rotation), `useTimeSlice.ts`, `useTheme.ts`
+  - components: `components/Panel.tsx`, `Search.tsx`, `OptionList.tsx`, `CountrySelect.tsx`,
+    `Timeline.tsx`, `About.tsx`, `SegmentedControl.tsx`, `MapControls.tsx` (globe/flat map,
+    rotation and theme), `ErrorBoundary.tsx`
   - `App.tsx` — app state (filters, search, data) and layout; `main.tsx` — entry point;
-    `suporte.ts` — WebGL 2 check
-  - `estilos.css` — Tailwind theme (light/dark colors as tokens) and the little that can't be done
+    `support.ts` — WebGL 2 check
+  - `styles.css` — Tailwind theme (light/dark colors as tokens) and the little that can't be done
     with classes (slider handles, MapLibre popups and controls)
 - `tests/` — tests (Vitest for the site, unittest for the scripts)
 - `data/raw/` — API response cache (not in git)

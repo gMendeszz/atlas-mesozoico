@@ -2,41 +2,41 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Página estática, sem JavaScript: só estilos daqui e imagens do próprio site -->
+    <!-- Static page, no JavaScript: only its own styles and images from the site itself -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; img-src 'self'; script-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
     <title>Page not found · Mesozoic Atlas</title>
-    <!-- Caminhos absolutos: esta página aparece em qualquer endereço inexistente do site -->
+    <!-- Absolute paths: this page shows up at any nonexistent address on the site -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style>
       :root {
-        --fundo: #fbf8f2;
-        --texto: #2a241c;
-        --suave: #6b6052;
-        --destaque: #a2471f;
-        --botao-hover: #3f352a;
+        --page: #fbf8f2;
+        --ink: #2a241c;
+        --muted: #6b6052;
+        --accent: #a2471f;
+        --button-hover: #3f352a;
         color-scheme: light dark;
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-        color: var(--texto);
+        color: var(--ink);
       }
 
-      /* Tema escuro: segue o sistema (sem JavaScript, não dá pra ler a escolha feita no atlas) */
+      /* Dark theme: follows the system (without JavaScript, the choice made in the atlas can't be read) */
       @media (prefers-color-scheme: dark) {
         :root {
-          --fundo: #1d1a16;
-          --texto: #ece6dc;
-          --suave: #b3a998;
-          --destaque: #f08a55;
-          --botao-hover: #d6cdbf;
+          --page: #1d1a16;
+          --ink: #ece6dc;
+          --muted: #b3a998;
+          --accent: #f08a55;
+          --button-hover: #d6cdbf;
         }
-        /* Rocha e pegadas mais escuras, mantendo o desenho */
-        .chao { filter: brightness(0.5) saturate(1.3); }
+        /* Darker rock and footprints, keeping the drawing */
+        .ground { filter: brightness(0.5) saturate(1.3); }
       }
 
       * { box-sizing: border-box; }
 
-      html, body { margin: 0; background: var(--fundo); }
+      html, body { margin: 0; background: var(--page); }
 
       body {
         display: grid;
@@ -51,13 +51,13 @@
         text-align: center;
       }
 
-      .codigo {
+      .code {
         margin: 0;
         font-size: 0.8125rem;
         font-weight: 600;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--suave);
+        color: var(--muted);
       }
 
       h1 {
@@ -67,62 +67,62 @@
         line-height: 1.15;
       }
 
-      .texto {
+      .text {
         max-width: 34rem;
         margin: 0 auto 28px;
         line-height: 1.55;
-        color: var(--suave);
+        color: var(--muted);
       }
 
-      .voltar {
+      .back {
         display: inline-block;
         padding: 12px 22px;
         border-radius: 8px;
-        background: var(--texto);
-        color: var(--fundo);
+        background: var(--ink);
+        color: var(--page);
         font-weight: 600;
         text-decoration: none;
       }
 
-      .voltar:hover { background: var(--botao-hover); }
+      .back:hover { background: var(--button-hover); }
 
-      .voltar:focus-visible {
-        outline: 3px solid var(--destaque);
+      .back:focus-visible {
+        outline: 3px solid var(--accent);
         outline-offset: 3px;
       }
 
-      /* ---------- Chão: camadas de rocha com uma trilha de pegadas de T. rex ---------- */
-      .chao {
+      /* ---------- Ground: rock layers with a trail of T. rex footprints ---------- */
+      .ground {
         position: relative;
         height: clamp(170px, 24vw, 270px);
-        background: url("/img/estratos.svg") bottom / 100% 100% no-repeat;
+        background: url("/img/strata.svg") bottom / 100% 100% no-repeat;
         overflow: hidden;
       }
 
-      /* A imagem é um pé direito com os dedos pra cima; girada 90°, o animal anda pra direita.
-         O pé esquerdo é o mesmo desenho espelhado. Os pés alternam acima/abaixo da linha do
-         passo, como numa trilha real. */
-      .pegada {
+      /* The image is a right foot with the toes up; rotated 90°, the animal walks to the right.
+         The left foot is the same drawing mirrored. The feet alternate above/below the stride
+         line, as in a real trackway. */
+      .footprint {
         position: absolute;
         width: clamp(54px, 7vw, 92px);
-        transform: translate(-50%, -50%) rotate(var(--giro)) scaleX(var(--lado));
+        transform: translate(-50%, -50%) rotate(var(--turn)) scaleX(var(--side));
       }
 
-      .direita { --lado: 1; top: 66%; }
-      .esquerda { --lado: -1; top: 43%; }
+      .right { --side: 1; top: 66%; }
+      .left { --side: -1; top: 43%; }
 
-      .pegada:nth-child(1) { left: 14%; --giro: 86deg; }
-      .pegada:nth-child(2) { left: 36%; --giro: 93deg; }
-      .pegada:nth-child(3) { left: 58%; --giro: 88deg; }
-      .pegada:nth-child(4) { left: 80%; --giro: 94deg; }
+      .footprint:nth-child(1) { left: 14%; --turn: 86deg; }
+      .footprint:nth-child(2) { left: 36%; --turn: 93deg; }
+      .footprint:nth-child(3) { left: 58%; --turn: 88deg; }
+      .footprint:nth-child(4) { left: 80%; --turn: 94deg; }
 
-      /* As pegadas aparecem uma depois da outra, como se o animal estivesse passando */
+      /* The footprints appear one after another, as if the animal were walking by */
       @media (prefers-reduced-motion: no-preference) {
-        .pegada { animation: surgir 600ms ease-out both; }
-        .pegada:nth-child(2) { animation-delay: 350ms; }
-        .pegada:nth-child(3) { animation-delay: 700ms; }
-        .pegada:nth-child(4) { animation-delay: 1050ms; }
-        @keyframes surgir {
+        .footprint { animation: appear 600ms ease-out both; }
+        .footprint:nth-child(2) { animation-delay: 350ms; }
+        .footprint:nth-child(3) { animation-delay: 700ms; }
+        .footprint:nth-child(4) { animation-delay: 1050ms; }
+        @keyframes appear {
           from { opacity: 0; }
           to { opacity: 1; }
         }
@@ -132,21 +132,21 @@
   <body>
     <main>
       <div>
-        <p class="codigo">Error 404</p>
+        <p class="code">Error 404</p>
         <h1>This fossil could not be found</h1>
-        <p class="texto">
+        <p class="text">
           The page you were looking for doesn’t exist. A <em>Tyrannosaurus rex</em> came through here,
           but only left its footprints. The atlas, with more than 22,000 fossils, is right where it was.
         </p>
-        <a class="voltar" href="/">Back to the Mesozoic Atlas</a>
+        <a class="back" href="/">Back to the Mesozoic Atlas</a>
       </div>
     </main>
 
-    <div class="chao" aria-hidden="true">
-      <img class="pegada direita" src="/img/pegada-rex.svg" alt="" />
-      <img class="pegada esquerda" src="/img/pegada-rex.svg" alt="" />
-      <img class="pegada direita" src="/img/pegada-rex.svg" alt="" />
-      <img class="pegada esquerda" src="/img/pegada-rex.svg" alt="" />
+    <div class="ground" aria-hidden="true">
+      <img class="footprint right" src="/img/trex-footprint.svg" alt="" />
+      <img class="footprint left" src="/img/trex-footprint.svg" alt="" />
+      <img class="footprint right" src="/img/trex-footprint.svg" alt="" />
+      <img class="footprint left" src="/img/trex-footprint.svg" alt="" />
     </div>
   </body>
 </html>

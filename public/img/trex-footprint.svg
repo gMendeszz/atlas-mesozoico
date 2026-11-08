@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 116 116">
+  <!--
+    Tyrannosaurus rex footprint (right foot, toes up), pressed into rock.
+
+    Shape based on tyrannosaurid footprints (ichnogenus Tyrannosauripus): three thick toes
+    spread in a fan, the middle one (III) the longest, a broad heel that merges straight into
+    the toes (without the thin "neck" of bird tracks), marked pads and short claws.
+
+    The light comes from the direction of the toes: that way the left foot (this drawing
+    mirrored, in the page's CSS) is lit the same way as the right one.
+
+    Layers, bottom to top:
+      1. rim of sediment pushed out by the foot
+      2. the print (darker in the middle, where it sank deeper)
+      3. toe and heel pads (deeper marks)
+      4. shadow on the upper wall and highlight on the lower wall (gives depth)
+      5. claws
+  -->
+  <defs>
+    <!-- Outline: heel → toe II (left) → toe III (middle) → toe IV (right) -->
+    <path id="outline" d="
+      M50 98
+      C38 98 30 92 27 82
+      C25 74 22 64 17 54
+      C12 45 8 36 9 28
+      C10 22 15 19 20 21
+      C24 23 27 29 30 35
+      C33 41 37 46 41 49
+      C40 38 40 22 43 12
+      C45 6 48 4 50 3
+      C52 4 55 6 57 12
+      C60 22 60 38 59 49
+      C63 46 67 41 70 35
+      C73 29 76 23 80 21
+      C85 19 90 22 91 28
+      C92 36 88 45 83 54
+      C78 64 75 74 73 82
+      C70 92 62 98 50 98 Z" />
+
+    <clipPath id="inside-print">
+      <use href="#outline" />
+    </clipPath>
+
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.8" />
+    </filter>
+    <filter id="softer" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" />
+    </filter>
+
+    <radialGradient id="floor" cx="50%" cy="60%" r="62%">
+      <stop offset="0" stop-color="#7d6a4c" />
+      <stop offset="0.7" stop-color="#94805e" />
+      <stop offset="1" stop-color="#a8936f" />
+    </radialGradient>
+  </defs>
+
+  <!-- 1. Rim of sediment pushed outward -->
+  <use href="#outline" fill="none" stroke="#ece2cc" stroke-width="8" stroke-linejoin="round" opacity="0.7" filter="url(#softer)" />
+
+  <!-- 2. The print -->
+  <use href="#outline" fill="url(#floor)" />
+
+  <g clip-path="url(#inside-print)">
+    <!-- 3. Pads: where the foot pressed hardest (3 per toe + heel) -->
+    <g fill="#5d4c34" opacity="0.42" filter="url(#soft)">
+      <ellipse cx="50" cy="78" rx="15" ry="11" />
+      <!-- toe III -->
+      <ellipse cx="50" cy="40" rx="6" ry="6.5" />
+      <ellipse cx="50" cy="27" rx="5.2" ry="5.5" />
+      <ellipse cx="50" cy="15" rx="4" ry="4.6" />
+      <!-- toe II (tilted) -->
+      <ellipse cx="30" cy="45" rx="6" ry="6.5" transform="rotate(-33 30 45)" />
+      <ellipse cx="23" cy="35" rx="5.2" ry="5.5" transform="rotate(-33 23 35)" />
+      <ellipse cx="17" cy="26" rx="4" ry="4.6" transform="rotate(-33 17 26)" />
+      <!-- toe IV (tilted) -->
+      <ellipse cx="70" cy="45" rx="6" ry="6.5" transform="rotate(33 70 45)" />
+      <ellipse cx="77" cy="35" rx="5.2" ry="5.5" transform="rotate(33 77 35)" />
+      <ellipse cx="83" cy="26" rx="4" ry="4.6" transform="rotate(33 83 26)" />
+    </g>
+
+    <!-- 4. Depth: the upper wall is in shadow, the lower one catches the light -->
+    <use href="#outline" fill="none" stroke="#3e3223" stroke-width="7" opacity="0.6" transform="translate(0 3)" filter="url(#soft)" />
+    <use href="#outline" fill="none" stroke="#f1e7d2" stroke-width="5" opacity="0.55" transform="translate(0 -2.5)" filter="url(#soft)" />
+  </g>
+
+  <!-- 5. Claws: short, coming out from inside the tip of each toe -->
+  <g fill="#5a4a33" opacity="0.7">
+    <path d="M47 10 Q50 0.5 53 10 Q50 8 47 10 Z" />
+    <path d="M13 26 Q9.5 18 17.5 20.5 Q14.5 22.5 13 26 Z" />
+    <path d="M87 26 Q90.5 18 82.5 20.5 Q85.5 22.5 87 26 Z" />
+  </g>
+</svg>

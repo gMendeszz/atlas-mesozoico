@@ -1,20 +1,20 @@
-# Dependências e build
+# Dependencies and build
 node_modules/
 dist/
 
-# Cache das respostas das APIs (51 MB; os scripts baixam de novo)
+# API response cache (51 MB; the scripts download it again)
 data/raw/
 
 # Python
 __pycache__/
 *.pyc
 
-# Configuração local de ferramentas e variáveis de ambiente
+# Local tool settings and environment variables
 .claude/
 .env
 .env.*
 
-# Arquivos que o Windows/OneDrive/macOS criam sozinhos
+# Files that Windows/OneDrive/macOS create on their own
 desktop.ini
 Thumbs.db
 .DS_Store

@@ -1,284 +1,279 @@
-// O app: guarda o estado (filtros, busca, dados), calcula o que aparece e mantém o mapa em dia.
-// A regra de negócio fica nos módulos puros (filtros.ts, busca.ts, paleo.ts, popup.ts), testados
-// à parte; aqui só se liga essa lógica à interface e ao mapa.
+// The app: holds the state (filters, search, data), calculates what's shown and keeps the map up
+// to date. The business rules live in the pure modules (filters.ts, search.ts, paleo.ts,
+// popup.ts), tested separately; this file only wires that logic to the UI and the map.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MA_SPAN } from "./constantes";
-import { carregarDados } from "./dados";
-import { LISTAS, calcular, filtrosParaURL, lerFiltrosDaURL, limparFiltros, temFiltroAtivo, type CampoLista } from "./filtros";
-import { locaisDoNome, nomesBuscaveis, resumoDaBusca } from "./busca";
-import { caminhoHistograma } from "./histograma";
-import { enquadrar, reduzirMovimento } from "./mapa";
-import { temWebGL } from "./suporte";
-import { fmt } from "./texto";
-import type { Continentes, Dados, Filtros, Ponto, Resultado } from "./tipos";
-import type { EstadoPaleo } from "./hooks/useEpocaPaleo";
-import { useCamadas } from "./hooks/useCamadas";
-import { useEpocaPaleo } from "./hooks/useEpocaPaleo";
-import { useMapa } from "./hooks/useMapa";
-import { useTema } from "./hooks/useTema";
-import { useVista } from "./hooks/useVista";
-import { Alternador } from "./componentes/Alternador";
-import { ControlesDoMapa } from "./componentes/ControlesDoMapa";
-import { Busca } from "./componentes/Busca";
-import { BOTAO_LARGO, NOTA, ROTULO } from "./componentes/classes";
-import { LinhaDoTempo } from "./componentes/LinhaDoTempo";
-import { ListaDeOpcoes } from "./componentes/ListaDeOpcoes";
-import { Painel } from "./componentes/Painel";
-import { SeletorPais } from "./componentes/SeletorPais";
-import { Sobre } from "./componentes/Sobre";
+import { MA_SPAN } from "./constants";
+import { loadData } from "./data";
+import { LISTS, calculate, filtersToURL, filtersFromURL, clearFilters, hasActiveFilter, type ListField } from "./filters";
+import { sitesForName, searchableNames, searchSummary } from "./search";
+import { histogramPath } from "./histogram";
+import { fitToPoints, reducedMotion } from "./map";
+import { hasWebGL } from "./support";
+import { fmt } from "./text";
+import type { Continents, Data, Filters, Point, Result } from "./types";
+import type { PaleoState } from "./hooks/useTimeSlice";
+import { useLayers } from "./hooks/useLayers";
+import { useTimeSlice } from "./hooks/useTimeSlice";
+import { useMap } from "./hooks/useMap";
+import { useTheme } from "./hooks/useTheme";
+import { useView } from "./hooks/useView";
+import { SegmentedControl } from "./components/SegmentedControl";
+import { MapControls } from "./components/MapControls";
+import { Search } from "./components/Search";
+import { WIDE_BUTTON, NOTE, LABEL } from "./components/classes";
+import { Timeline } from "./components/Timeline";
+import { OptionList } from "./components/OptionList";
+import { Panel } from "./components/Panel";
+import { CountrySelect } from "./components/CountrySelect";
+import { About } from "./components/About";
 
-const CONTINENTES: { valor: Continentes; texto: string }[] = [
-  { valor: "atuais", texto: "Present-day" },
-  { valor: "antigos", texto: "Ancient" },
+const CONTINENTS: { value: Continents; text: string }[] = [
+  { value: "present", text: "Present-day" },
+  { value: "ancient", text: "Ancient" },
 ];
-const HISTOGRAMA_VAZIO = new Float64Array(MA_SPAN);
+const EMPTY_HISTOGRAM = new Float64Array(MA_SPAN);
 
 export function App() {
-  const [tema, alternarTema] = useTema();
-  const [erro, setErro] = useState<string | null>(
-    temWebGL ? null : "Your browser doesn’t support WebGL 2, which the map needs. Try updating it or using another browser."
+  const [theme, toggleTheme] = useTheme();
+  const [error, setError] = useState<string | null>(
+    hasWebGL ? null : "Your browser doesn’t support WebGL 2, which the map needs. Try updating it or using another browser."
   );
-  const mostrarErro = useCallback((mensagem: string) => setErro((atual) => atual ?? mensagem), []);
-  const [dados, setDados] = useState<Dados | null>(null);
-  const [f, setF] = useState<Filtros>(() => lerFiltrosDaURL(location.search));
-  const [arrastando, setArrastando] = useState(false); // alça da linha do tempo sendo arrastada
-  const [consulta, setConsulta] = useState(""); // texto buscado
+  const showError = useCallback((message: string) => setError((current) => current ?? message), []);
+  const [data, setData] = useState<Data | null>(null);
+  const [f, setF] = useState<Filters>(() => filtersFromURL(location.search));
+  const [dragging, setDragging] = useState(false); // a timeline handle is being dragged
+  const [query, setQuery] = useState(""); // searched text
 
-  const elMapa = useRef<HTMLDivElement>(null);
-  const elPainel = useRef<HTMLElement>(null);
-  const elLinhaTempo = useRef<HTMLElement>(null);
+  const mapEl = useRef<HTMLDivElement>(null);
+  const panelEl = useRef<HTMLElement>(null);
+  const timelineEl = useRef<HTMLElement>(null);
 
-  const mapa = useMapa({
-    container: elMapa,
-    linhaTempo: elLinhaTempo,
-    tema,
-    ativo: temWebGL,
-    aoErro: mostrarErro,
+  const mapState = useMap({
+    container: mapEl,
+    timeline: timelineEl,
+    theme,
+    enabled: hasWebGL,
+    onError: showError,
   });
-  const { map, estiloVersao } = mapa;
-  const { vista, escolherVista, girando, alternarGiro, pararGiro } = useVista(map, estiloVersao);
-  const paleo = useEpocaPaleo(f.continentes, f.de, f.ate, dados?.meta.assinatura_locais ?? null);
+  const { map, styleVersion } = mapState;
+  const { view, chooseView, spinning, toggleSpin, stopSpin } = useView(map, styleVersion);
+  const paleo = useTimeSlice(f.continents, f.from, f.to, data?.meta.sites_signature ?? null);
 
-  // Dados dos fósseis (o download começa em main.tsx, junto com a página)
+  // Fossil data (the download starts in main.tsx, along with the page)
   useEffect(() => {
-    if (!temWebGL) return;
-    let valendo = true;
-    carregarDados()
+    if (!hasWebGL) return;
+    let current = true;
+    loadData()
       .then((d) => {
-        if (!valendo) return;
-        // País da URL que não existe nos dados: volta pra "todos"
-        setF((atual) => (atual.pais && !d.paises.some((p) => p.cc === atual.pais) ? { ...atual, pais: "" } : atual));
-        setDados(d);
+        if (!current) return;
+        // A country in the URL that doesn't exist in the data: back to "all"
+        setF((prev) => (prev.country && !d.countries.some((c) => c.cc === prev.country) ? { ...prev, country: "" } : prev));
+        setData(d);
       })
       .catch((e: unknown) => {
         console.error(e);
-        if (valendo) mostrarErro("Couldn’t load the fossil data. Please reload the page.");
+        if (current) showError("Couldn’t load the fossil data. Please reload the page.");
       });
     return () => {
-      valendo = false;
+      current = false;
     };
-  }, [mostrarErro]);
+  }, [showError]);
 
-  // Tudo que aparece (pontos, contagens, histograma) sai daqui, recalculado só quando algo muda
-  const resultado = useMemo(() => (dados ? calcular(dados, f, paleo.epoca) : null), [dados, f, paleo.epoca]);
+  // Everything shown (points, counts, histogram) comes from here, recalculated only when something changes
+  const result = useMemo(() => (data ? calculate(data, f, paleo.timeSlice) : null), [data, f, paleo.timeSlice]);
 
-  // ---------- Busca ----------
-  const sugestoes = useMemo(() => (dados ? nomesBuscaveis(dados) : []), [dados]);
-  const achado = useMemo(() => (dados && consulta ? locaisDoNome(dados, consulta) : null), [dados, consulta]);
-  const destaque = useMemo(
-    () => (achado && resultado ? resultado.features.filter((p) => achado.locais.has(p.id)) : []),
-    [achado, resultado]
+  // ---------- Search ----------
+  const suggestions = useMemo(() => (data ? searchableNames(data) : []), [data]);
+  const match = useMemo(() => (data && query ? sitesForName(data, query) : null), [data, query]);
+  const highlight = useMemo(
+    () => (match && result ? result.features.filter((p) => match.sites.has(p.id)) : []),
+    [match, result]
   );
 
-  // ---------- Mapa ----------
-  const { abrirPopup, fecharPopup } = useCamadas({ mapa, tema, dados, resultado, epoca: paleo.epoca, destaque, filtros: f });
+  // ---------- Map ----------
+  const { openPopup, closePopup } = useLayers({ mapState, theme, data, result, timeSlice: paleo.timeSlice, highlight, filters: f });
 
-  const enquadrarPontos = useCallback(
-    (features: Ponto[]) => {
+  const fitPoints = useCallback(
+    (features: Point[]) => {
       if (!map) return;
-      pararGiro();
-      enquadrar(map, features, elPainel.current);
+      stopSpin();
+      fitToPoints(map, features, panelEl.current);
     },
-    [map, pararGiro]
+    [map, stopSpin]
   );
 
-  // Ao abrir com ?pais= na URL e ao escolher um país: enquadra os pontos dele
-  const enquadrarPais = useRef(Boolean(f.pais));
+  // When opening with ?country= in the URL and when choosing a country: fits its points
+  const fitCountry = useRef(Boolean(f.country));
   useEffect(() => {
-    if (!map || !estiloVersao || !resultado || !enquadrarPais.current) return;
-    enquadrarPais.current = false;
-    if (f.pais) enquadrarPontos(resultado.features);
-  }, [map, estiloVersao, resultado, f.pais, enquadrarPontos]);
+    if (!map || !styleVersion || !result || !fitCountry.current) return;
+    fitCountry.current = false;
+    if (f.country) fitPoints(result.features);
+  }, [map, styleVersion, result, f.country, fitPoints]);
 
-  // Filtros na URL (link compartilhável); enquanto arrasta a alça, só no fim
+  // Filters in the URL (shareable link); while dragging a handle, only at the end
   useEffect(() => {
-    if (!arrastando) history.replaceState(null, "", filtrosParaURL(f) || location.pathname);
-  }, [f, arrastando]);
+    if (!dragging) history.replaceState(null, "", filtersToURL(f) || location.pathname);
+  }, [f, dragging]);
 
-  // Textos anunciados a leitores de tela (contagem, resumo da busca) não mudam a cada quadro do
-  // arrasto da alça: usam o último resultado com a alça parada. (Ajuste de estado durante a
-  // renderização: o padrão do React pra "lembrar o último valor".)
-  const [resultadoParado, setResultadoParado] = useState(resultado);
-  if (!arrastando && resultadoParado !== resultado) setResultadoParado(resultado);
-  const paraAnunciar = arrastando ? resultadoParado : resultado;
-  const infoBusca = useMemo(() => {
-    if (!dados) return "";
-    const visiveis = achado && paraAnunciar ? paraAnunciar.features.filter((p) => achado.locais.has(p.id)) : [];
-    return resumoDaBusca(dados, consulta, achado, visiveis);
-  }, [dados, consulta, achado, paraAnunciar]);
+  // Texts announced to screen readers (count, search summary) don't change on every frame of a
+  // handle drag: they use the last result with the handle at rest. (Adjusting state during
+  // render: React's pattern for "remembering the last value".)
+  const [restingResult, setRestingResult] = useState(result);
+  if (!dragging && restingResult !== result) setRestingResult(result);
+  const toAnnounce = dragging ? restingResult : result;
+  const searchInfo = useMemo(() => {
+    if (!data) return "";
+    const visible = match && toAnnounce ? toAnnounce.features.filter((p) => match.sites.has(p.id)) : [];
+    return searchSummary(data, query, match, visible);
+  }, [data, query, match, toAnnounce]);
 
-  function buscar(texto: string) {
-    const alvo = texto.trim();
-    setConsulta(alvo);
-    if (!alvo || !dados || !resultado || !map) return;
-    const { locais } = locaisDoNome(dados, alvo);
-    const visiveis = resultado.features.filter((p) => locais.has(p.id));
-    if (!visiveis.length) return;
-    fecharPopup(); // o popup da busca anterior não fica por cima do resultado novo
-    pararGiro();
-    if (visiveis.length > 1) {
-      enquadrarPontos(visiveis);
+  function search(text: string) {
+    const target = text.trim();
+    setQuery(target);
+    if (!target || !data || !result || !map) return;
+    const { sites } = sitesForName(data, target);
+    const visible = result.features.filter((p) => sites.has(p.id));
+    if (!visible.length) return;
+    closePopup(); // the previous search's popup doesn't stay on top of the new result
+    stopSpin();
+    if (visible.length > 1) {
+      fitPoints(visible);
       return;
     }
-    const [p] = visiveis;
-    const centro = p.geometry.coordinates as [number, number];
-    map.once("moveend", () => abrirPopup(p.id, centro));
-    // Zoom acima de clusterMaxZoom (9): o ponto aparece sozinho, fora de agrupamentos
-    map.easeTo({ center: centro, zoom: Math.max(map.getZoom(), 9.5), duration: reduzirMovimento.matches ? 0 : 1000 });
+    const [p] = visible;
+    const center = p.geometry.coordinates as [number, number];
+    map.once("moveend", () => openPopup(p.id, center));
+    // Zoom above clusterMaxZoom (9): the point shows on its own, outside any cluster
+    map.easeTo({ center, zoom: Math.max(map.getZoom(), 9.5), duration: reducedMotion.matches ? 0 : 1000 });
   }
 
-  // ---------- Mudanças nos filtros ----------
-  const mudarTempo = useCallback((de: number, ate: number, arrastandoAgora: boolean) => {
-    setArrastando(arrastandoAgora);
-    setF((atual) => (atual.de === de && atual.ate === ate ? atual : { ...atual, de, ate }));
+  // ---------- Filter changes ----------
+  const changeTime = useCallback((from: number, to: number, nowDragging: boolean) => {
+    setDragging(nowDragging);
+    setF((prev) => (prev.from === from && prev.to === to ? prev : { ...prev, from, to }));
   }, []);
-  const mudarLista = (campo: CampoLista) => (i: number, marcado: boolean) =>
-    setF((atual) => ({ ...atual, [campo]: atual[campo].map((v, k) => (k === i ? marcado : v)) }));
-  function escolherPais(cc: string) {
-    enquadrarPais.current = true;
-    setF((atual) => ({ ...atual, pais: cc }));
+  const changeList = (field: ListField) => (i: number, checked: boolean) =>
+    setF((prev) => ({ ...prev, [field]: prev[field].map((v, k) => (k === i ? checked : v)) }));
+  function chooseCountry(cc: string) {
+    fitCountry.current = true;
+    setF((prev) => ({ ...prev, country: cc }));
   }
-  function limpar() {
-    setF(limparFiltros);
-    // O botão some ao limpar; o foco do teclado vai pro primeiro filtro
-    document.getElementById("grupos-0")?.focus();
+  function clear() {
+    setF(clearFilters);
+    // The button disappears when clearing; keyboard focus moves to the first filter
+    document.getElementById("groups-0")?.focus();
   }
 
-  const caminho = useMemo(() => caminhoHistograma(resultado?.histograma ?? HISTOGRAMA_VAZIO), [resultado]);
-  const [grupos, tipos, dietas] = LISTAS;
+  const path = useMemo(() => histogramPath(result?.histogram ?? EMPTY_HISTOGRAM), [result]);
+  const [groups, types, diets] = LISTS;
 
   return (
     <>
-      {/* O MapLibre põe position: relative no elemento do mapa; quem fixa na tela é a div de fora */}
+      {/* MapLibre sets position: relative on the map element; the outer div pins it to the screen */}
       <div className="absolute inset-0">
-        <div ref={elMapa} className="size-full bg-espaco" />
+        <div ref={mapEl} className="size-full bg-space" />
       </div>
 
-      <Painel
-        ref={elPainel}
-        contagem={erro ?? textoDaContagem(resultado)}
-        anuncio={erro ?? textoDaContagem(paraAnunciar)}
-        erro={erro !== null}
-      >
-        <Busca sugestoes={sugestoes} info={infoBusca} aoBuscar={buscar} />
+      <Panel ref={panelEl} count={error ?? countText(result)} announcement={error ?? countText(toAnnounce)} error={error !== null}>
+        <Search suggestions={suggestions} info={searchInfo} onSearch={search} />
 
-        <p className={`${ROTULO} mb-1.5`} id="rot-continentes">
+        <p className={`${LABEL} mb-1.5`} id="continents-label">
           Continents
         </p>
-        <Alternador
-          rotulo="Continents"
-          rotuloVisivel="rot-continentes"
-          opcoes={CONTINENTES}
-          valor={f.continentes}
-          aoEscolher={(continentes) => setF((atual) => ({ ...atual, continentes }))}
+        <SegmentedControl
+          label="Continents"
+          labelledBy="continents-label"
+          options={CONTINENTS}
+          value={f.continents}
+          onChoose={(continents) => setF((prev) => ({ ...prev, continents }))}
         />
-        {f.continentes === "antigos" && (
-          <p className="mt-1.5 text-xs leading-[1.4] text-suave" aria-live="polite">
-            {textoDoPaleo(paleo, resultado)}
+        {f.continents === "ancient" && (
+          <p className="mt-1.5 text-xs leading-[1.4] text-muted" aria-live="polite">
+            {paleoText(paleo, result)}
           </p>
         )}
 
-        <ListaDeOpcoes
-          id={grupos.campo}
-          legenda="Group"
-          opcoes={grupos.opcoes}
-          marcados={f.grupos}
-          contagens={resultado?.porGrupo ?? null}
-          aoMudar={mudarLista("grupos")}
+        <OptionList
+          id={groups.field}
+          legend="Group"
+          options={groups.options}
+          checked={f.groups}
+          counts={result?.byGroup ?? null}
+          onChange={changeList("groups")}
         >
-          <p className={NOTA}>Each dot is colored by the group with the most fossils at that site.</p>
-          <details className="mt-1 text-xs text-suave">
-            <summary className="w-fit cursor-pointer text-destaque">What’s in “Others”?</summary>
+          <p className={NOTE}>Each dot is colored by the group with the most fossils at that site.</p>
+          <details className="mt-1 text-xs text-muted">
+            <summary className="w-fit cursor-pointer text-accent">What’s in “Others”?</summary>
             <p className="mt-1 leading-[1.4]">
               Fossils identified only as dinosaurs, groups outside these three (such as herrerasaurids), and
               eggs and footprints with no assigned group.
             </p>
           </details>
-        </ListaDeOpcoes>
-        <ListaDeOpcoes
-          id={tipos.campo}
-          legenda="Fossil type"
-          recolhivel
-          opcoes={tipos.opcoes}
-          marcados={f.tipos}
-          contagens={resultado?.porTipo ?? null}
-          aoMudar={mudarLista("tipos")}
+        </OptionList>
+        <OptionList
+          id={types.field}
+          legend="Fossil type"
+          collapsible
+          options={types.options}
+          checked={f.types}
+          counts={result?.byType ?? null}
+          onChange={changeList("types")}
         />
-        <ListaDeOpcoes
-          id={dietas.campo}
-          legenda="Diet"
-          recolhivel
-          opcoes={dietas.opcoes}
-          marcados={f.dietas}
-          contagens={resultado?.porDieta ?? null}
-          aoMudar={mudarLista("dietas")}
+        <OptionList
+          id={diets.field}
+          legend="Diet"
+          collapsible
+          options={diets.options}
+          checked={f.diets}
+          counts={result?.byDiet ?? null}
+          onChange={changeList("diets")}
         >
-          <p className={NOTA}>Diet is that of the animal’s group in the PBDB, not something observed in each fossil.</p>
-        </ListaDeOpcoes>
+          <p className={NOTE}>Diet is that of the animal’s group in the PBDB, not something observed in each fossil.</p>
+        </OptionList>
 
-        <SeletorPais paises={dados?.paises ?? []} porPais={resultado?.porPais ?? null} valor={f.pais} aoEscolher={escolherPais} />
+        <CountrySelect countries={data?.countries ?? []} byCountry={result?.byCountry ?? null} value={f.country} onChoose={chooseCountry} />
 
-        {temFiltroAtivo(f) && (
-          <button type="button" onClick={limpar} className={`${BOTAO_LARGO} mt-3.5 font-semibold text-destaque`}>
+        {hasActiveFilter(f) && (
+          <button type="button" onClick={clear} className={`${WIDE_BUTTON} mt-3.5 font-semibold text-accent`}>
             Clear filters
           </button>
         )}
 
-        <Sobre dados={dados} />
-      </Painel>
+        <About data={data} />
+      </Panel>
 
-      <ControlesDoMapa
-        vista={vista}
-        aoTrocarVista={() => escolherVista(vista === "globe" ? "mercator" : "globe")}
-        girando={girando}
-        aoAlternarGiro={alternarGiro}
-        tema={tema}
-        aoAlternarTema={alternarTema}
+      <MapControls
+        view={view}
+        onToggleView={() => chooseView(view === "globe" ? "mercator" : "globe")}
+        spinning={spinning}
+        onToggleSpin={toggleSpin}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
-      <LinhaDoTempo
-        ref={elLinhaTempo}
-        de={f.de}
-        ate={f.ate}
-        caminho={caminho}
-        paleoVisivel={Boolean(paleo.epoca)}
-        aoMudar={mudarTempo}
-        aoSoltar={() => setArrastando(false)}
+      <Timeline
+        ref={timelineEl}
+        from={f.from}
+        to={f.to}
+        path={path}
+        paleoVisible={Boolean(paleo.timeSlice)}
+        onChange={changeTime}
+        onRelease={() => setDragging(false)}
       />
     </>
   );
 }
 
-function textoDaContagem(r: Resultado | null): string {
+function countText(r: Result | null): string {
   if (!r) return "Loading data…";
-  if (!r.totalFosseis) return "No fossils match these filters";
-  return `${fmt(r.totalFosseis)} fossils at ${fmt(r.features.length)} sites`;
+  if (!r.totalFossils) return "No fossils match these filters";
+  return `${fmt(r.totalFossils)} fossils at ${fmt(r.features.length)} sites`;
 }
 
-function textoDoPaleo(paleo: EstadoPaleo, r: Resultado | null): string {
-  if (paleo.erro) return "Couldn’t load the ancient continents. Please try again.";
-  if (paleo.carregando) return `Loading Earth at ${paleo.t} million years ago…`;
-  let texto = `Earth ${paleo.t} million years ago (middle of the selected range). Present-day coastlines, shown where they were at that time.`;
-  if (r?.semPosicao) texto += ` ${fmt(r.semPosicao)} fossils are hidden: the model can’t reconstruct their location.`;
-  return texto;
+function paleoText(paleo: PaleoState, r: Result | null): string {
+  if (paleo.error) return "Couldn’t load the ancient continents. Please try again.";
+  if (paleo.loading) return `Loading Earth at ${paleo.t} million years ago…`;
+  let text = `Earth ${paleo.t} million years ago (middle of the selected range). Present-day coastlines, shown where they were at that time.`;
+  if (r?.noPosition) text += ` ${fmt(r.noPosition)} fossils are hidden: the model can’t reconstruct their location.`;
+  return text;
 }

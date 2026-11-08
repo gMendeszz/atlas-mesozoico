@@ -1,20 +1,20 @@
 import { describe, it, expect } from "vitest";
-import { limitesDosPontos } from "../src/geo";
+import { boundsOfPoints } from "../src/geo";
 
-describe("limitesDosPontos (enquadramento)", () => {
-  it("país que cruza a linha de data não vira um enquadramento do mundo inteiro", () => {
-    // Nova Zelândia: ilhas principais (~172° E) e Ilhas Chatham (-176,7°, do outro lado)
-    const [[oeste], [leste]] = limitesDosPontos([
+describe("boundsOfPoints (fitting the map)", () => {
+  it("a country crossing the date line doesn't turn into a whole-world fit", () => {
+    // New Zealand: main islands (~172° E) and the Chatham Islands (-176.7°, on the other side)
+    const [[west], [east]] = boundsOfPoints([
       [172.6, -43.5],
       [174.8, -41.3],
       [-176.7, -43.8],
     ])!;
-    expect(leste - oeste).toBeLessThan(15);
+    expect(east - west).toBeLessThan(15);
   });
 
-  it("caso comum: caixa simples em volta dos pontos", () => {
+  it("common case: a simple box around the points", () => {
     expect(
-      limitesDosPontos([
+      boundsOfPoints([
         [-53.7, -29.7],
         [-40.5, -7.5],
       ])
@@ -24,7 +24,7 @@ describe("limitesDosPontos (enquadramento)", () => {
     ]);
   });
 
-  it("sem pontos não há o que enquadrar", () => {
-    expect(limitesDosPontos([])).toBeNull();
+  it("with no points there's nothing to fit", () => {
+    expect(boundsOfPoints([])).toBeNull();
   });
 });
