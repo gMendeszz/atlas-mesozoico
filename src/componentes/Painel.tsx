@@ -1,13 +1,11 @@
-// Painel lateral: título, botões de tema e de recolher, a contagem e os controles.
+// Painel lateral: título, botão de recolher, a contagem e os filtros. (Controles do mapa, como
+// mapa/globo e tema, ficam no canto do mapa: ver ControlesDoMapa.tsx.)
 import { useId, useState, type ReactNode, type Ref } from "react";
 import { BOTAO_ICONE, CARTAO } from "./classes";
-import { IconeLua, IconeSeta, IconeSol } from "./Icones";
-import type { Tema } from "../tipos";
+import { IconeSeta } from "./Icones";
 
 interface Props {
   ref?: Ref<HTMLElement>;
-  tema: Tema;
-  aoAlternarTema: () => void;
   contagem: string; // na tela, sempre atualizada
   anuncio: string; // a mesma contagem pra leitores de tela, sem mudar a cada quadro de um arrasto
   erro: boolean; // a contagem é uma mensagem de erro
@@ -17,10 +15,9 @@ interface Props {
 // No celular o painel começa recolhido pra não cobrir o mapa
 const comecaAberto = () => !matchMedia("(max-width: 600px)").matches;
 
-export function Painel({ ref, tema, aoAlternarTema, contagem, anuncio, erro, children }: Props) {
+export function Painel({ ref, contagem, anuncio, erro, children }: Props) {
   const [aberto, setAberto] = useState(comecaAberto);
   const idCorpo = useId();
-  const escuro = tema === "escuro";
 
   return (
     <aside
@@ -31,18 +28,11 @@ export function Painel({ ref, tema, aoAlternarTema, contagem, anuncio, erro, chi
     >
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-bold tracking-[-0.01em]">Atlas Mesozoico</h1>
-        <div className="flex flex-none gap-1.5">
-          <button type="button" className={BOTAO_ICONE} aria-pressed={escuro} title="Tema escuro" onClick={aoAlternarTema}>
-            <span className="sr-only">Tema escuro</span>
-            {/* A lua no claro (vai pro escuro); o sol no escuro (vai pro claro) */}
-            {escuro ? <IconeSol /> : <IconeLua />}
-          </button>
-          <button type="button" className={BOTAO_ICONE} aria-expanded={aberto} aria-controls={idCorpo} onClick={() => setAberto(!aberto)}>
+        <button type="button" className={BOTAO_ICONE} aria-expanded={aberto} aria-controls={idCorpo} onClick={() => setAberto(!aberto)}>
             {/* Nome fixo: o estado (aberto/fechado) quem diz é o aria-expanded */}
             <span className="sr-only">Painel de controles</span>
             <IconeSeta className={`transition-transform duration-200 motion-reduce:transition-none ${aberto ? "" : "rotate-180"}`} />
           </button>
-        </div>
       </div>
       <p className={`mt-0.5 text-md font-semibold tabular-nums ${erro ? "text-erro" : ""}`} aria-hidden="true">
         {contagem}

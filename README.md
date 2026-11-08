@@ -89,7 +89,7 @@ de 0,7°, chegando a ~15° em casos raros (ex.: Grã-Bretanha no Triássico).
 
 ## Tema escuro
 
-Segue o tema do sistema; o botão de sol/lua no painel troca e a escolha fica salva (escolher o
+Segue o tema do sistema; o botão de sol/lua no canto do mapa (abaixo do zoom) troca e a escolha fica salva (escolher o
 mesmo tema do sistema volta a seguir o sistema). Trocar o tema troca o mapa base (OpenFreeMap
 `positron` ↔ `dark`, este com tons ajustados em `src/mapa.ts`) e leva junto pontos, busca e
 continentes antigos. As cores dos grupos têm uma versão pra cada tema, conferidas com simulação
@@ -145,7 +145,7 @@ Cada teste foi validado reintroduzindo de propósito o bug que ele protege e con
     base), `useCamadas.ts` (pontos, continentes antigos, destaque e popups em dia com o estado),
     `useVista.ts` (globo/plano e rotação), `useEpocaPaleo.ts`, `useTema.ts`
   - componentes: `componentes/Painel.tsx`, `Busca.tsx`, `ListaDeOpcoes.tsx`, `SeletorPais.tsx`,
-    `LinhaDoTempo.tsx`, `Sobre.tsx`, `Alternador.tsx`
+    `LinhaDoTempo.tsx`, `Sobre.tsx`, `Alternador.tsx`, `ControlesDoMapa.tsx` (mapa/globo, rotação e tema)
   - `App.tsx` — estado do app (filtros, busca, dados) e a tela; `main.tsx` — entrada;
     `suporte.ts` — confere WebGL 2
   - `estilos.css` — tema do Tailwind (cores claro/escuro como tokens) e o pouco que não dá pra

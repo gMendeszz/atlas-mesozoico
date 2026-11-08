@@ -10,7 +10,7 @@ import { caminhoHistograma } from "./histograma";
 import { enquadrar, reduzirMovimento } from "./mapa";
 import { temWebGL } from "./suporte";
 import { fmt } from "./texto";
-import type { Continentes, Dados, Filtros, Ponto, Resultado, Vista } from "./tipos";
+import type { Continentes, Dados, Filtros, Ponto, Resultado } from "./tipos";
 import type { EstadoPaleo } from "./hooks/useEpocaPaleo";
 import { useCamadas } from "./hooks/useCamadas";
 import { useEpocaPaleo } from "./hooks/useEpocaPaleo";
@@ -18,6 +18,7 @@ import { useMapa } from "./hooks/useMapa";
 import { useTema } from "./hooks/useTema";
 import { useVista } from "./hooks/useVista";
 import { Alternador } from "./componentes/Alternador";
+import { ControlesDoMapa } from "./componentes/ControlesDoMapa";
 import { Busca } from "./componentes/Busca";
 import { BOTAO_LARGO, NOTA, ROTULO } from "./componentes/classes";
 import { LinhaDoTempo } from "./componentes/LinhaDoTempo";
@@ -26,10 +27,6 @@ import { Painel } from "./componentes/Painel";
 import { SeletorPais } from "./componentes/SeletorPais";
 import { Sobre } from "./componentes/Sobre";
 
-const VISTAS: { valor: Vista; texto: string }[] = [
-  { valor: "mercator", texto: "Mapa" },
-  { valor: "globe", texto: "Globo" },
-];
 const CONTINENTES: { valor: Continentes; texto: string }[] = [
   { valor: "atuais", texto: "Atuais" },
   { valor: "antigos", texto: "Antigos" },
@@ -179,22 +176,13 @@ export function App() {
 
       <Painel
         ref={elPainel}
-        tema={tema}
-        aoAlternarTema={alternarTema}
         contagem={erro ?? textoDaContagem(resultado)}
         anuncio={erro ?? textoDaContagem(paraAnunciar)}
         erro={erro !== null}
       >
         <Busca sugestoes={sugestoes} info={infoBusca} aoBuscar={buscar} />
 
-        <Alternador rotulo="Visualização" opcoes={VISTAS} valor={vista} aoEscolher={escolherVista} />
-        {vista === "globe" && (
-          <button type="button" onClick={alternarGiro} className={`${BOTAO_LARGO} mb-1 text-texto`}>
-            {girando ? "Pausar rotação" : "Girar globo"}
-          </button>
-        )}
-
-        <p className={`${ROTULO} mt-3 mb-1.5`} id="rot-continentes">
+        <p className={`${ROTULO} mb-1.5`} id="rot-continentes">
           Continentes
         </p>
         <Alternador
@@ -230,6 +218,7 @@ export function App() {
         <ListaDeOpcoes
           id={tipos.campo}
           legenda="Tipo de fóssil"
+          recolhivel="masculino"
           opcoes={tipos.opcoes}
           marcados={f.tipos}
           contagens={resultado?.porTipo ?? null}
@@ -238,6 +227,7 @@ export function App() {
         <ListaDeOpcoes
           id={dietas.campo}
           legenda="Dieta"
+          recolhivel="feminino"
           opcoes={dietas.opcoes}
           marcados={f.dietas}
           contagens={resultado?.porDieta ?? null}
@@ -256,6 +246,15 @@ export function App() {
 
         <Sobre dados={dados} />
       </Painel>
+
+      <ControlesDoMapa
+        vista={vista}
+        aoTrocarVista={() => escolherVista(vista === "globe" ? "mercator" : "globe")}
+        girando={girando}
+        aoAlternarGiro={alternarGiro}
+        tema={tema}
+        aoAlternarTema={alternarTema}
+      />
 
       <LinhaDoTempo
         ref={elLinhaTempo}

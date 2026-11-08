@@ -1,6 +1,8 @@
 // "Sobre os dados e limitações". Os números vêm dos próprios dados, pra nunca ficarem desatualizados.
 import { useMemo, type ReactNode } from "react";
 import { fmt } from "../texto";
+import { ROTULO } from "./classes";
+import { IconeChevron } from "./Icones";
 import type { Dados } from "../tipos";
 
 // Enquanto os dados carregam, valores aproximados (os de novembro de 2026)
@@ -35,9 +37,12 @@ function Externo({ href, children }: { href: string; children: ReactNode }) {
 export function Sobre({ dados }: { dados: Dados | null }) {
   const v = useMemo(() => (dados ? valoresDosDados(dados) : PROVISORIOS), [dados]);
   return (
-    <details className="mt-3.5 border-t border-borda pt-2.5 text-xs leading-[1.45] text-suave">
-      <summary className="cursor-pointer font-semibold text-texto">Sobre os dados e limitações</summary>
-      <ul className="mt-1.5 list-disc pl-4 [&>li]:my-[3px]">
+    <details className="group mt-3.5 border-t border-borda text-xs leading-[1.45] text-suave">
+      <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+        <IconeChevron className="flex-none transition-transform duration-150 group-open:rotate-90 motion-reduce:transition-none" />
+        <span className={ROTULO}>Sobre os dados e limitações</span>
+      </summary>
+      <ul className="list-disc pl-4 [&>li]:my-[3px]">
         <li>
           <strong>Fonte:</strong> <Externo href="https://paleobiodb.org">Paleobiology Database</Externo>, base científica
           mantida por pesquisadores desde 1998. Cada registro vem de uma publicação: estes {v.fosseis} fósseis vêm de{" "}
