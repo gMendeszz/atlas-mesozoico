@@ -4,15 +4,13 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
-// Onde o site fica no domínio: "/" (domínio próprio ou usuario.github.io) ou a subpasta do
-// repositório (ex.: SITE_BASE=/atlas-mesozoico/ npm run build, pra usuario.github.io/atlas-mesozoico/).
-// O app em si usa caminhos relativos e não depende disso; só a página 404 precisa, porque ela
-// aparece em qualquer endereço inexistente, em qualquer profundidade.
-const SITE_BASE = (process.env.SITE_BASE ?? "/").replace(/\/?$/, "/");
-// No Git Bash do Windows, "/atlas-mesozoico" vira "C:/Program Files/Git/atlas-mesozoico" sozinho
-if (!/^\/[\w\-/]*$/.test(SITE_BASE)) {
-  throw new Error(`SITE_BASE inválido: "${SITE_BASE}". Use algo como /atlas-mesozoico/ (no Git Bash: MSYS_NO_PATHCONV=1).`);
-}
+// Endereço público do site. Daqui saem os links absolutos (prévia ao compartilhar, sitemap,
+// robots.txt) e a subpasta usada pela página 404. Outro endereço (ex.: domínio próprio):
+//   SITE_URL=https://meusite.com/ npm run build
+const SITE_URL = new URL(process.env.SITE_URL ?? "https://gmendeszz.github.io/atlas-mesozoico/").href.replace(/\/?$/, "/");
+// Subpasta ("/atlas-mesozoico/" ou "/"). O app em si usa caminhos relativos e não depende disso;
+// só a página 404 precisa, porque ela aparece em qualquer endereço inexistente, em qualquer profundidade.
+const SITE_BASE = new URL(SITE_URL).pathname;
 
 // Política de Segurança de Conteúdo: o navegador só aceita scripts deste site e só conversa
 // com este site e com o servidor do mapa base. Se algum dia entrar código injetado, ele não
@@ -64,6 +62,29 @@ export default defineConfig({
       transformIndexHtml: () => [
         { tag: "meta", attrs: { "http-equiv": "Content-Security-Policy", content: CSP }, injectTo: "head-prepend" },
       ],
+    },
+    {
+      // Links absolutos no index.html (Open Graph e canonical exigem endereço completo)
+      name: "endereco-do-site",
+      transformIndexHtml: (html) => html.replaceAll("%SITE_URL%", SITE_URL),
+    },
+    {
+      // robots.txt e sitemap.xml, que também precisam do endereço completo
+      name: "robots-e-sitemap",
+      apply: "build",
+      generateBundle() {
+        const robots = ["User-agent: *", "Allow: /", "", `Sitemap: ${SITE_URL}sitemap.xml`, ""].join("\n");
+        this.emitFile({ type: "asset", fileName: "robots.txt", source: robots });
+        this.emitFile({
+          type: "asset",
+          fileName: "sitemap.xml",
+          source: `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${SITE_URL}</loc><lastmod>${new Date().toISOString().slice(0, 10)}</lastmod></url>
+</urlset>
+`,
+        });
+      },
     },
     {
       // public/404.html é copiada sem passar pelo Vite: aqui os caminhos "/..." dela ganham a subpasta

@@ -18,13 +18,20 @@ Abre em http://localhost:5173
 ## Publicar
 
 ```bash
-npm run build                                # domínio próprio ou usuario.github.io
-SITE_BASE=/atlas-mesozoico/ npm run build    # usuario.github.io/atlas-mesozoico/
+npm run build                                   # pra https://gmendeszz.github.io/atlas-mesozoico/
+SITE_URL=https://meusite.com/ npm run build     # outro endereço (ex.: domínio próprio)
 ```
 
-O app funciona em qualquer endereço (caminhos relativos); `SITE_BASE` só ajusta os caminhos da
-página 404, que aparece em qualquer endereço inexistente. No Git Bash do Windows, use
-`MSYS_NO_PATHCONV=1` antes, senão ele troca `/atlas-mesozoico/` por um caminho do Windows.
+O app funciona em qualquer endereço (caminhos relativos). `SITE_URL` só entra no que precisa de
+endereço completo: prévia ao compartilhar o link (Open Graph), `canonical`, `sitemap.xml`,
+`robots.txt` e os caminhos da página 404, que aparece em qualquer endereço inexistente.
+
+Arquivos de web em `public/`: `favicon.svg` (pegada de T. rex) e `favicon-32.png`, ícones de tela
+inicial em `icones/` (inclusive a versão "maskable", recortável em círculo no Android),
+`manifest.webmanifest` e `previa-social.png` (1200×630, print real do globo). O `robots.txt` e o
+`sitemap.xml` são gerados na build. Num endereço com subpasta (`usuario.github.io/repositorio/`),
+os buscadores só leem o `robots.txt` da raiz do domínio; o `sitemap.xml` pode ser enviado direto
+no Google Search Console.
 
 ## Atualizar os dados
 
