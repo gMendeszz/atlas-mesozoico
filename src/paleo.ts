@@ -1,63 +1,63 @@
-// Continentes antigos: escolha da época, carregamento e decodificação dos arquivos
-// public/data/paleo/<época>.json (ver scripts/baixar_paleo.py).
+// Ancient continents: choosing the time slice, loading and decoding the files
+// public/data/paleo/<time>.json (see scripts/fetch_paleo.py).
 import type { Feature, FeatureCollection, Polygon, Position } from "geojson";
-import { PALEO_PRIMEIRA, PALEO_ULTIMA } from "./constantes";
-import type { Epoca } from "./tipos";
+import { PALEO_FIRST, PALEO_LAST } from "./constants";
+import type { TimeSlice } from "./types";
 
-interface EpocaBruta {
+interface RawTimeSlice {
   t: number;
-  assinatura: string;
-  pontos: (number | null)[];
-  costas: number[][];
+  signature: string;
+  points: (number | null)[];
+  coasts: number[][];
 }
 
-// A época mostrada é o meio do intervalo da linha do tempo, arredondado pra dezena
-export const epocaDoIntervalo = (de: number, ate: number): number =>
-  Math.min(PALEO_ULTIMA, Math.max(PALEO_PRIMEIRA, Math.round((de + ate) / 20) * 10));
+// The slice shown is the middle of the timeline range, rounded to the nearest ten
+export const timeSliceForRange = (from: number, to: number): number =>
+  Math.min(PALEO_LAST, Math.max(PALEO_FIRST, Math.round((from + to) / 20) * 10));
 
-// Contornos vêm em décimos de grau, com o 1º ponto absoluto e os outros como diferença
-// pro anterior. Devolve GeoJSON com cada contorno como polígono fechado.
-export function decodificarCostas(costas: number[][]): FeatureCollection<Polygon> {
-  const features = costas.map((r): Feature<Polygon> => {
+// Outlines come in tenths of a degree, with the 1st point absolute and the others as the
+// difference from the previous one. Returns GeoJSON with each outline as a closed polygon.
+export function decodeCoasts(coasts: number[][]): FeatureCollection<Polygon> {
+  const features = coasts.map((r): Feature<Polygon> => {
     let x = r[0];
     let y = r[1];
-    const anel: Position[] = [[x / 10, y / 10]];
+    const ring: Position[] = [[x / 10, y / 10]];
     for (let k = 2; k < r.length; k += 2) {
       x += r[k];
       y += r[k + 1];
-      anel.push([x / 10, y / 10]);
+      ring.push([x / 10, y / 10]);
     }
-    const [x0, y0] = anel[0];
-    const [xn, yn] = anel[anel.length - 1];
-    if (x0 !== xn || y0 !== yn) anel.push([x0, y0]);
-    return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [anel] } };
+    const [x0, y0] = ring[0];
+    const [xn, yn] = ring[ring.length - 1];
+    if (x0 !== xn || y0 !== yn) ring.push([x0, y0]);
+    return { type: "Feature", properties: {}, geometry: { type: "Polygon", coordinates: [ring] } };
   });
   return { type: "FeatureCollection", features };
 }
 
-const epocasCarregadas = new Map<number, Promise<Epoca>>(); // época -> dados prontos
+const loadedSlices = new Map<number, Promise<TimeSlice>>(); // time -> ready data
 
-// Baixa uma época (uma vez só). `assinatura` vem de dinos.json: a época só é aceita se foi
-// gerada a partir exatamente da mesma lista de locais (senão os pontos ficariam trocados).
-export function carregarEpoca(t: number, assinatura: string): Promise<Epoca> {
-  let promessa = epocasCarregadas.get(t);
-  if (!promessa) {
-    // ?v=assinatura: cada versão dos dados tem sua própria URL, então o cache do navegador
-    // nunca mistura uma época antiga com um dinos.json novo
-    promessa = fetch(`data/paleo/${t}.json?v=${encodeURIComponent(assinatura)}`)
+// Downloads a time slice (only once). `signature` comes from dinos.json: the slice is only
+// accepted if it was generated from exactly the same site list (otherwise points would be swapped).
+export function loadTimeSlice(t: number, signature: string): Promise<TimeSlice> {
+  let promise = loadedSlices.get(t);
+  if (!promise) {
+    // ?v=signature: each data version has its own URL, so the browser cache never mixes an
+    // old time slice with a new dinos.json
+    promise = fetch(`data/paleo/${t}.json?v=${encodeURIComponent(signature)}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<EpocaBruta>;
+        return r.json() as Promise<RawTimeSlice>;
       })
       .then((d) => {
-        if (d.assinatura !== assinatura) throw new Error("época gerada de outra lista de locais");
-        return { t: d.t, pontos: d.pontos, costas: decodificarCostas(d.costas) };
+        if (d.signature !== signature) throw new Error("time slice generated from another site list");
+        return { t: d.t, points: d.points, coasts: decodeCoasts(d.coasts) };
       })
-      .catch((erro: unknown) => {
-        epocasCarregadas.delete(t); // deixa tentar de novo depois
-        throw erro;
+      .catch((error: unknown) => {
+        loadedSlices.delete(t); // allows trying again later
+        throw error;
       });
-    epocasCarregadas.set(t, promessa);
+    loadedSlices.set(t, promise);
   }
-  return promessa;
+  return promise;
 }

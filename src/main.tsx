@@ -1,19 +1,19 @@
-// Ponto de entrada: começa a baixar os dados já e monta o app React.
+// Entry point: starts downloading the data right away and mounts the React app.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "./estilos.css";
+import "./styles.css";
 import { App } from "./App";
-import { ErroGeral } from "./componentes/ErroGeral";
-import { carregarDados } from "./dados";
-import { temWebGL } from "./suporte";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { loadData } from "./data";
+import { hasWebGL } from "./support";
 
-// Em paralelo com o React e o estilo do mapa (o App pega a mesma promessa depois)
-if (temWebGL) carregarDados().catch(() => {}); // o erro é mostrado pelo App
+// In parallel with React and the map style (the App picks up the same promise later)
+if (hasWebGL) loadData().catch(() => {}); // the App shows the error
 
 createRoot(document.getElementById("app")!).render(
   <StrictMode>
-    <ErroGeral>
+    <ErrorBoundary>
       <App />
-    </ErroGeral>
+    </ErrorBoundary>
   </StrictMode>
 );

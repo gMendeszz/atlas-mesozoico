@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 220" preserveAspectRatio="none">
+  <!-- Sedimentary rock layers (strata), from youngest (top, lightest) to oldest -->
+  <path d="M0 40 C200 20 380 60 600 42 S1000 18 1200 38 V220 H0Z" fill="#e9dfcb" />
+  <path d="M0 92 C240 72 420 108 640 90 S1010 70 1200 88 V220 H0Z" fill="#ddcfb4" />
+  <path d="M0 140 C220 126 470 158 700 140 S1020 122 1200 136 V220 H0Z" fill="#cdbb9a" />
+  <path d="M0 184 C260 172 520 198 760 184 S1040 170 1200 182 V220 H0Z" fill="#b9a37e" />
+</svg>

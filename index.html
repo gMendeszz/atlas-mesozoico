@@ -5,27 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mesozoic Atlas · Map of dinosaur fossils</title>
     <meta name="description" content="Interactive map of 22,000 Mesozoic dinosaur fossils, with a globe, a timeline and ancient continents. Data from the Paleobiology Database." />
-    <!-- O marcador SITE_URL (entre %) vira o endereço público do site (ver vite.config.ts) -->
+    <!-- The SITE_URL placeholder (between % signs) becomes the site's public address (see vite.config.ts) -->
     <link rel="canonical" href="%SITE_URL%" />
 
-    <!-- Antes de tudo: põe o tema certo (claro/escuro) sem a página piscar -->
-    <script src="tema-inicial.js"></script>
+    <!-- First of all: sets the right theme (light/dark) without the page flashing -->
+    <script src="initial-theme.js"></script>
     <meta name="theme-color" content="#fbf8f2" />
 
-    <!-- Ícones: SVG nos navegadores atuais, PNG nos demais; apple-touch e manifest pra tela inicial do celular -->
+    <!-- Icons: SVG in current browsers, PNG in the rest; apple-touch and manifest for the phone home screen -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
-    <link rel="apple-touch-icon" href="/icones/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
-    <!-- Prévia ao compartilhar o link (WhatsApp, LinkedIn, Twitter/X...) -->
+    <!-- Link preview when sharing (WhatsApp, LinkedIn, Twitter/X...) -->
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:site_name" content="Mesozoic Atlas" />
     <meta property="og:title" content="Mesozoic Atlas · Map of dinosaur fossils" />
     <meta property="og:description" content="Interactive map of 22,000 dinosaur fossils, from the Triassic to the Cretaceous, with a globe and ancient continents." />
     <meta property="og:url" content="%SITE_URL%" />
-    <meta property="og:image" content="%SITE_URL%previa-social.png" />
+    <meta property="og:image" content="%SITE_URL%social-preview.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Globe with dinosaur fossil sites across the Americas, next to the name Mesozoic Atlas" />

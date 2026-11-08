@@ -1,5 +1,5 @@
 {
-  // Só confere os tipos (npm run typecheck); quem converte TypeScript em JavaScript é o Vite
+  // Type checking only (npm run typecheck); Vite is what turns TypeScript into JavaScript
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],

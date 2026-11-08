@@ -1,93 +1,93 @@
 import { describe, it, expect } from "vitest";
-import { htmlDoLocal, htmlDica } from "../src/popup";
-import { filtrosPadrao } from "../src/filtros";
-import { nomePais, esc, fmt } from "../src/texto";
-import { dadosDeTeste } from "./dados-de-teste";
+import { siteHtml, tooltipHtml } from "../src/popup";
+import { defaultFilters } from "../src/filters";
+import { countryName, esc, fmt } from "../src/text";
+import { testData } from "./test-data";
 
-describe("segurança: texto dos dados nunca vira HTML", () => {
-  it("nome malicioso aparece como texto, sem criar elemento", () => {
-    const html = htmlDoLocal(dadosDeTeste(), 1, filtrosPadrao());
+describe("security: text from the data never becomes HTML", () => {
+  it("a malicious name shows as text, without creating an element", () => {
+    const html = siteHtml(testData(), 1, defaultFilters());
     expect(html).not.toContain("<img");
     expect(html).toContain("&#60;img");
   });
 
-  it("aspas são escapadas (protege atributos como title=\"...\")", () => {
+  it('quotes are escaped (protects attributes like title="...")', () => {
     expect(esc(`" onmouseover="x`)).not.toContain('"');
   });
 
-  it("números formatados não deixam passar texto", () => {
-    // @ts-expect-error: de propósito, um texto onde deveria vir número
+  it("formatted numbers don't let text through", () => {
+    // @ts-expect-error: on purpose, a string where a number should go
     expect(fmt("<b>1</b>")).not.toContain("<");
   });
 
-  it("formação e autor vindos dos dados também são escapados", () => {
-    const dados = dadosDeTeste();
-    dados.dic.formacao[1] = "<script>x</script>";
-    dados.dic.autor[1] = "<b>y</b>";
-    expect(htmlDoLocal(dados, 0, filtrosPadrao())).not.toContain("<script>");
-    expect(htmlDoLocal(dados, 1, filtrosPadrao())).not.toContain("<b>");
+  it("formation and author from the data are escaped too", () => {
+    const data = testData();
+    data.dict.formation[1] = "<script>x</script>";
+    data.dict.author[1] = "<b>y</b>";
+    expect(siteHtml(data, 0, defaultFilters())).not.toContain("<script>");
+    expect(siteHtml(data, 1, defaultFilters())).not.toContain("<b>");
   });
 
-  it("o resumo ao passar o mouse também escapa", () => {
-    const dados = dadosDeTeste();
-    dados.dic.estado[2] = "<script>alert(1)</script>";
-    expect(htmlDica(dados, 1, 3)).not.toContain("<script>");
+  it("the hover summary escapes too", () => {
+    const data = testData();
+    data.dict.state[2] = "<script>alert(1)</script>";
+    expect(tooltipHtml(data, 1, 3)).not.toContain("<script>");
   });
 });
 
-describe("veracidade: o popup não mostra mais certeza do que a fonte", () => {
-  it("identificação incerta mostra o texto original e a marca", () => {
-    const html = htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao());
+describe("accuracy: the popup doesn't show more certainty than the source", () => {
+  it("an uncertain identification shows the original text and the tag", () => {
+    const html = siteHtml(testData(), 0, defaultFilters());
     expect(html).toContain("cf. Tyrannosaurus rex");
     expect(html).toContain("uncertain identification");
   });
 
-  it("identificação certa não leva a marca", () => {
-    const html = htmlDoLocal(dadosDeTeste(), 2, filtrosPadrao());
+  it("a certain identification has no tag", () => {
+    const html = siteHtml(testData(), 2, defaultFilters());
     expect(html).not.toContain("uncertain identification");
   });
 
-  it("com filtro de grupo, lista só os visíveis e avisa quantos foram escondidos", () => {
-    const f = { ...filtrosPadrao(), grupos: [false, true, false, false] };
-    const html = htmlDoLocal(dadosDeTeste(), 1, f);
+  it("with a group filter, lists only the visible ones and says how many were hidden", () => {
+    const f = { ...defaultFilters(), groups: [false, true, false, false] };
+    const html = siteHtml(testData(), 1, f);
     expect(html).toContain("1 fossil");
     expect(html).toContain("+2 hidden by filters");
   });
 
-  it("com filtro de tipo, a lista também respeita (só a pegada)", () => {
-    const f = { ...filtrosPadrao(), tipos: [false, true, false] };
-    const html = htmlDoLocal(dadosDeTeste(), 0, f);
+  it("with a type filter, the list respects it too (only the footprint)", () => {
+    const f = { ...defaultFilters(), types: [false, true, false] };
+    const html = siteHtml(testData(), 0, f);
     expect(html).toContain("1 fossil");
     expect(html).toContain(">footprint<");
     expect(html).not.toContain(">egg<");
   });
 
-  it("autor e ano aparecem, exceto em identificação incerta (seria certeza demais)", () => {
-    expect(htmlDoLocal(dadosDeTeste(), 1, filtrosPadrao())).toContain("Fulano, 1900");
-    expect(htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao())).not.toContain("Osborn");
+  it("author and year show, except for an uncertain identification (that would be too much certainty)", () => {
+    expect(siteHtml(testData(), 1, defaultFilters())).toContain("Fulano, 1900");
+    expect(siteHtml(testData(), 0, defaultFilters())).not.toContain("Osborn");
   });
 
-  it("mostra a formação geológica, quando há", () => {
-    expect(htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao())).toContain("Santa Maria Formation");
-    expect(htmlDoLocal(dadosDeTeste(), 2, filtrosPadrao())).not.toContain("Formation");
+  it("shows the geological formation, when there is one", () => {
+    expect(siteHtml(testData(), 0, defaultFilters())).toContain("Santa Maria Formation");
+    expect(siteHtml(testData(), 2, defaultFilters())).not.toContain("Formation");
   });
 
-  it('em continentes antigos, o nome do lugar é marcado como "Today:" (o lugar atual)', () => {
-    expect(htmlDoLocal(dadosDeTeste(), 0, { ...filtrosPadrao(), continentes: "antigos" })).toContain("Today: Rio Grande do Sul");
-    expect(htmlDoLocal(dadosDeTeste(), 0, filtrosPadrao())).not.toContain("Today:");
+  it('with ancient continents, the place name is marked "Today:" (the present-day place)', () => {
+    expect(siteHtml(testData(), 0, { ...defaultFilters(), continents: "ancient" })).toContain("Today: Rio Grande do Sul");
+    expect(siteHtml(testData(), 0, defaultFilters())).not.toContain("Today:");
   });
 });
 
-describe("nomePais", () => {
-  it("traduz os códigos de oceano próprios do PBDB (não são ISO)", () => {
-    expect(nomePais("O2")).toBe("North Atlantic");
+describe("countryName", () => {
+  it("translates the PBDB's own ocean codes (they're not ISO)", () => {
+    expect(countryName("O2")).toBe("North Atlantic");
   });
 
-  it('aceita o "UK" que o PBDB usa no lugar do ISO "GB"', () => {
-    expect(nomePais("UK")).toBe("United Kingdom");
+  it('accepts the "UK" the PBDB uses instead of the ISO "GB"', () => {
+    expect(countryName("UK")).toBe("United Kingdom");
   });
 
-  it("código desconhecido não derruba a página", () => {
-    expect(() => nomePais("O9")).not.toThrow();
+  it("an unknown code doesn't bring the page down", () => {
+    expect(() => countryName("O9")).not.toThrow();
   });
 });
