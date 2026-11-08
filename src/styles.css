@@ -253,6 +253,12 @@
   pointer-events: none;
 }
 
+/* Map credit links: taller click area (24px, the minimum target size) without changing the
+   layout. Vertical padding on an inline link grows its box but not the line. */
+.maplibregl-ctrl-attrib a {
+  padding-block: 5px;
+}
+
 /* ---------- MapLibre controls in the dark theme ---------- */
 :root[data-theme="dark"] .maplibregl-ctrl-group,
 :root[data-theme="dark"] .maplibregl-ctrl-attrib,

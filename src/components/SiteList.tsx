@@ -73,7 +73,7 @@ export function SiteList({ data, sites, searching, onShow }: Props) {
         )}
         {data && sites.length === 0 && <p className="text-xs text-muted">No sites match.</p>}
         {sites.length > limit && (
-          <button type="button" onClick={showMore} className="mt-1.5 text-sm font-semibold text-accent">
+          <button type="button" onClick={showMore} className="mt-0.5 py-1 text-sm font-semibold text-accent">
             Show {Math.min(PAGE, sites.length - limit)} more ({fmt(sites.length - limit)} left)
           </button>
         )}

@@ -25,7 +25,7 @@ export function createMap(container: HTMLElement, theme: Theme, bottomMargin: nu
     container,
     center: [-20, 10],
     zoom: wholeGlobeZoom(innerWidth, innerHeight - bottomMargin - 24),
-    attributionControl: { compact: true },
+    attributionControl: false, // added below, once the style has started loading
     // More restrained inertia than the default (maxSpeed 1400, deceleration 2500): on the globe,
     // the default inertia made a short drag spin 150°+ after releasing the mouse.
     dragPan: { linearity: 0.25, maxSpeed: 600, deceleration: 3500 },
@@ -42,8 +42,20 @@ export function createMap(container: HTMLElement, theme: Theme, bottomMargin: nu
   // Zoom only: the compass (north up) isn't needed, the atlas doesn't rotate the map sideways
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
   loadStyle(map, theme);
+  // Map credits shown from the start: on its own, MapLibre only writes them once the style has
+  // arrived from the server, which on a slow phone was the last thing to appear on the page.
+  // When the style arrives with the same text, MapLibre doesn't repeat it; if OpenFreeMap ever
+  // changes its text, theirs shows up next to this one.
+  map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: BASE_MAP_CREDITS }));
   return map;
 }
+
+// Exactly the same HTML as the "attribution" of OpenFreeMap's tiles (tiles.openfreemap.org/planet),
+// character for character (&copy; included): MapLibre compares the text, not how it looks
+const BASE_MAP_CREDITS =
+  '<a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> ' +
+  '<a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> ' +
+  'Data from <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>';
 
 // ---------- Base-map theme ----------
 const STYLES: Record<Theme, string> = {

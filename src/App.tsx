@@ -219,7 +219,7 @@ export function App() {
             have their own group.
           </p>
           <details className="mt-1 text-xs text-muted">
-            <summary className="w-fit cursor-pointer text-accent">What’s in “Others”?</summary>
+            <summary className="-my-1 w-fit cursor-pointer py-1 text-accent">What’s in “Others”?</summary>
             <p className="mt-1 leading-[1.4]">
               Fossils identified only as dinosaurs, groups outside these four (such as herrerasaurids), and
               eggs and footprints with no assigned group.

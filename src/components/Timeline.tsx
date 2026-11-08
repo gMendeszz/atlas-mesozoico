@@ -161,7 +161,8 @@ function Link({ href, children }: { href: string; children: string }) {
 
 function Credits({ paleoVisible }: { paleoVisible: boolean }) {
   return (
-    <footer className="mt-1.5 text-2xs text-muted">
+    // Links padded to a 24px-tall click area (inline padding: the line height doesn't change)
+    <footer className="mt-1.5 text-2xs text-muted [&_a]:py-[5px]">
       Data:{" "}
       <a href="https://paleobiodb.org" target="_blank" rel="noopener">
         Paleobiology Database<span className="sr-only"> (opens in a new tab)</span>
