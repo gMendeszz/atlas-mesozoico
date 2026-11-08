@@ -35,7 +35,8 @@ export function montarPopups(map: MapaLibre, dados: Dados, filtros: () => Filtro
   };
   const aoClicarCluster = async (e: MapLayerMouseEvent) => {
     const c = e.features![0];
-    const zoom = await fonte(map, "dinos")!.getClusterExpansionZoom(c.properties.cluster_id);
+    const zoom = await fonte(map, "dinos")?.getClusterExpansionZoom(c.properties.cluster_id);
+    if (zoom === undefined) return; // mapa base trocando (tema)
     map.easeTo({ center: (c.geometry as Ponto["geometry"]).coordinates as [number, number], zoom });
   };
   // Resumo ao passar o mouse (só em aparelhos com mouse)

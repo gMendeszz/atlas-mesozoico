@@ -5,9 +5,10 @@ import "./estilos.css";
 import { App } from "./App";
 import { ErroGeral } from "./componentes/ErroGeral";
 import { carregarDados } from "./dados";
+import { temWebGL } from "./suporte";
 
 // Em paralelo com o React e o estilo do mapa (o App pega a mesma promessa depois)
-carregarDados().catch(() => {}); // o erro é mostrado pelo App
+if (temWebGL) carregarDados().catch(() => {}); // o erro é mostrado pelo App
 
 createRoot(document.getElementById("app")!).render(
   <StrictMode>
