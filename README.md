@@ -55,6 +55,8 @@ The app works at any address (relative paths). `SITE_URL` is only used where a f
 required: the link preview (Open Graph), `canonical`, `sitemap.xml`, `robots.txt` and the paths
 of the 404 page, which can show up at any nonexistent address.
 
+<img src="docs/page-404.png" width="60%" alt="Animation of the 404 page: T. rex footprints appear one by one across layers of rock under the message “This fossil could not be found”">
+
 Web files in `public/`: `favicon.svg` (a T. rex footprint) and `favicon-32.png`, home-screen icons
 in `icons/` (including a "maskable" version that Android can crop to a circle),
 `manifest.webmanifest` and `social-preview.png` (1200×630, a real screenshot of the globe).
