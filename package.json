@@ -17,7 +17,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "maplibre-gl": "6.16.0",
+    "maplibre-gl": "6.17.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
